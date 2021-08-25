@@ -134,8 +134,8 @@ if __name__ == "__main__":
                         help=("If supplied, generate cutout images and 2048x2048 "
                               "pixel tiles with this prefix in the "
                               "`config.frames_directory` location"))
-    parser.add_argument("--snr_max", type=float, default=0,
-                        help="Replace S/N to with this ")
+    parser.add_argument("--max_snr", type=float, default=0,
+                        help="Force max S/N to this value by altering the noise values")
     parser.add_argument("--snr_thresh", type=float, default=0,
                         help="Adjust S/N when larger than this.")
     parser.add_argument("--stop_at", type=int, default=-1,
@@ -192,7 +192,7 @@ if __name__ == "__main__":
 
     # Fill pixel and metastores
     for n in names:
-        im = nameset_to_imset(n, zeropoints=config.zeropoints, snr_max=config.snr_max)
+        im = nameset_to_imset(n, zeropoints=config.zeropoints, max_snr=config.max_snr)
         pixelstore.add_exposure(im, bitmask=config.bitmask,
                                 do_fluxcal=config.do_fluxcal)
         metastore.add_exposure(im)
