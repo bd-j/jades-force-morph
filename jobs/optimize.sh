@@ -1,5 +1,4 @@
 #!/bin/bash
-#SBATCH --mail-user=benjamin.johnson@cfa.harvard.edu  # Where to send mail
 #SBATCH --job-name=fpho_optimization # Job name
 #SBATCH --partition=comp-astro       # queue for job submission
 #SBATCH --account=comp-astro         # queue for job submission

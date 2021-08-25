@@ -13,7 +13,10 @@ from forcepho.patches.storage import MetaStore
 from forcepho.utils import read_config, sourcecat_dtype
 from forcepho.superscene import LinkedSuperScene, isophotal_radius
 
-from starmask import mask_psf, mask_radius, get_cat_star
+try:
+    from starmask import mask_psf, mask_radius, get_cat_star
+except(ImportError):
+    pass
 from utils import max_roi, cat_to_reg, make_regions, in_isophotes
 
 
@@ -83,7 +86,7 @@ if __name__ == "__main__":
     parser.add_argument("--config_file", type=str, default="./hlf_config.yml")
     parser.add_argument("--detection_catalog", type=str, default=None)
     parser.add_argument("--bright_catalog", type=str, default=None)
-    parser.add_argument("--small_catalog", type=str, default="smallcat.fits")
+    parser.add_argument("--output_catalog", type=str, default="smallcat.fits")
     parser.add_argument("--snr_threshold", type=float, default=0)
     parser.add_argument("--center", type=float, nargs="*", default=None)
     parser.add_argument("--seed", type=int, default=-1)
