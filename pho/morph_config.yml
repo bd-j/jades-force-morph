@@ -1,0 +1,121 @@
+# fPho Configuration file
+
+# ----------------
+# --- Overall ----
+logging:
+  True
+
+# -----------------------
+# --- Filters being run ---
+bandlist:
+ - F090W
+ - F115W
+ - F150W
+ - F200W
+ - F277W
+ - F335M
+ - F336W
+ - F410M
+ - F444W
+
+# ------------------------------
+# --- photometric zeropoints ---
+
+# Only required if images do not have the ABMAG keyword and are not already in nJy/pix
+#zeropoints:
+#  F090W: 24.04.....
+
+
+# ------------------------------
+# --- exposure backgrounds ---
+# in nJy/pix, to be subtracted from individual exposures
+#tweakbg:
+#  F090W: -0.0511.....
+
+# -----------------------
+# --- Input data locations ---
+frames_directory:  # full path (optional, for preprocessing)
+  $PROJECT_DIR/data/images/cutouts
+frame_search_pattern:
+  jades-morph-??-??_*sci.fits
+detection_catalog: # full path to input catalog
+  $PROJECT_DIR/data/catalogs/detection_table_v0.5.fits
+raw_catalog:
+  $PROJECT_DIR/data/catalogs/hlf_udf_v0.2.fits
+do_fluxcal:  # whether to flux calibrate the images using ABMAG keyword
+  0
+bitmask: # integer corresponding to the bits of the mask image that constitue "bad" pixels.
+  1
+
+store_directory:
+  $PROJECT_DIR/data/stores
+splinedatafile:
+  $PROJECT_DIR/data/stores/sersic_mog_model.smooth=0.0150.h5
+pixelstorefile:
+  pixels_jades-morph.h5
+metastorefile:
+  meta_jades-morph.json
+psfstorefile:
+  psf_jades_ng4.h5
+
+# ------------------------
+# --- Output locations
+outbase:
+  ../output/test
+scene_catalog:
+  outscene.fits
+
+# -----------------------
+# --- Bounds & Priors ---
+minflux:
+
+bounds_kwargs:
+  n_sig_flux: 5.0  # Nsigma/snr at flux = 1/nJy
+  sqrtq_range: # range of sqrt(b/a)
+    - 0.4
+    - 1.0
+  pa_range:  # range of pa, radians
+    - -2.0
+    - 2.0
+  n_pix: # number of pixels for dRA, dDec
+    2
+  pixscale: # pixelscale for dRA, dDdec
+    0.03
+
+# ------------------------
+# --- Data Types/Sizes ---
+pix_dtype:
+  float32
+meta_dtype:
+  float32
+super_pixel_size:  # number of pixels along one side of a superpixel
+  8
+nside_full:  # number of pixels along one side of a square input frame
+ - 2048
+ - 2048
+
+# -----------------------
+# --- Patch Generation ---
+max_active_fraction:
+  0.1
+maxactive_per_patch:
+  15
+patch_maxradius:  # in arcsec
+  15
+target_niter:
+  256
+ntry_checkout:
+  1000
+buffer_size:
+  5e7
+
+# -----------------------
+# --- HMC parameters ---
+max_treedepth:
+  9
+sampling_draws:
+  256
+warmup:
+ - 128
+full_cov:
+  True
