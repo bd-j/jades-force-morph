@@ -20,7 +20,8 @@ pre-processing scripts
 * `background.py` - This script fits a global background tweak to residual
                     images (using sigma clipping). These backgrounds should be
                     subtracted from images before a final run.  The residual
-                    images can come from an optimization run.
+                    images can come from an optimization run, or an agressively
+                    masked image, or..
 
 
 Steps
@@ -41,16 +42,16 @@ Steps
 
 4. Background subtraction & optimization loop
 
-   * Optimize sources in the small catalog (`optimal_all.py`) based on mosaic.
+   * Optimize sources in the small catalog (`optimize.py`) based on mosaic.
 
    * Fit for a residual background (`background.py`) in the mosaic.
      If significant, put resulting tweak values in config file.
 
    * Look for objects missing in the initial catalog?
 
-   * Re-optimize sources in the small catalog (`optimal_all.py`) based on mosaic.
+   * Re-optimize sources in the small catalog (`optimize.py`) based on mosaic.
      Replace initialization catalog with the optimization results.
 
-5. Sample posterior for source properties (`multi_patch_serial.py`)
+5. Sample posterior for source properties (`sample.py`, `sample.sh`)
 
 6. Post-process to create residual images (if available), show chains, etc...

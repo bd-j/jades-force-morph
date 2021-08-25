@@ -29,12 +29,12 @@ outbase=$PROJECT_DIR/output/sampling_v1
 
 echo "Running multi patch sampling for $config"
 cd $PROJECT_DIR/pho
-python multi_patch_serial.py --config_file $config \
-                             #--tweak_background tweakbg \
-                             --raw_catalog  $raw \
-                             --add_barriers 0 \
-                             --full_cov 0 \
-                             --discard_tuning 0 \
-                             --outbase $outbase
+python sample.py --config_file $config \
+                 #--tweak_background tweakbg \
+                 --raw_catalog  $raw \
+                 --add_barriers 0 \
+                 --full_cov 0 \
+                 --discard_tuning 0 \
+                 --outbase $outbase
 
 date

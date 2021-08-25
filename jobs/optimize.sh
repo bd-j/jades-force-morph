@@ -28,13 +28,13 @@ outbase=$PROJECT_DIR/output/optimization_v1
 
 echo "Running optimization test for $config"
 cd $PROJECT_DIR/pho
-python optimal_all.py --config_file $config \
-                      --raw_catalog $catalog \
-                      #--tweak_background tweakbg \
-                      --n_pix_sw 4 \
-                      --minflux 0 --maxfluxfactor 3 \
-                      --strict 1 --maxactive_per_patch 12 \
-                      --add_barriers 1 --use_gradients 1 --gtol 1e-4 --linear_optimize 1 \
-                      --outbase $outbase
+python optimize.py --config_file $config \
+                   --raw_catalog $catalog \
+                   #--tweak_background tweakbg \
+                   --n_pix_sw 4 \
+                   --minflux 0 --maxfluxfactor 3 \
+                   --strict 1 --maxactive_per_patch 12 \
+                   --add_barriers 1 --use_gradients 1 --gtol 1e-4 --linear_optimize 1 \
+                   --outbase $outbase
 
 date
