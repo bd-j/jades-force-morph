@@ -35,9 +35,9 @@ bandlist:
 # -----------------------
 # --- Input data locations ---
 frames_directory:  # full path (optional, for preprocessing)
-  $PROJECT_DIR/data/images/cutouts
+  $PROJECT_DIR/data/cutouts
 frame_search_pattern:
-  jades-morph-??-??_*sci.fits
+  jades-morph-mosaic-??-??_*[WM].fits
 detection_catalog: # full path to input catalog
   $PROJECT_DIR/data/catalogs/detection_table_v0.5.fits
 raw_catalog:

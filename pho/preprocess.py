@@ -11,7 +11,7 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
-from astropy.nddata import Cutout2D
+from astropy.nddata import Cutout2D, NoOverlapError
 
 from forcepho.utils import read_config
 from forcepho.patches.storage import ImageNameSet, ImageSet, header_to_id
@@ -20,8 +20,20 @@ from forcepho.patches.storage import PixelStore, MetaStore
 
 def prep_cutouts(original_names, cutID="jades-morph", path_out=None,
                  cutout_kwargs={}):
-    for n in original_names:
+    """Make 2048 x 2048 pixel tiles of the original mosaic images, and write
+    them to fits files. Any tiles filled with NaNs (i.e. no data) are not
+    written to disk.  Output filenames have the format
+    `cutID_<X>_<Y>_<original_image_name>.fits
+    where <X> and <Y> are integers that identify the location of the tile in the
+    larger original image.
+
+    Assumes the mosaics all have the same central coordinate.
+    """
+    for i, n in enumerate(original_names):
         im, hdr = fits.getdata(n), fits.getheader(n)
+        if i == 0:
+            ra, dec = mosaic_center(hdr)
+            cutout_kwargs.update(dict(ra=ra, dec=dec))
         cutout, tiles, nt = make_cutouts(im, hdr, **cutout_kwargs)
 
         # construct the filenames
@@ -30,7 +42,7 @@ def prep_cutouts(original_names, cutID="jades-morph", path_out=None,
         if path_out is None:
             path_out = path_in
         name_out = "{}/{}_{}".format(path_out, cutID, name_in)
-        write_cutout(name_out, cutout, hdr)
+        #write_cutout(name_out, cutout, hdr)
 
         for x in range(nt[0]):
             for y in range(nt[1]):
@@ -41,7 +53,9 @@ def prep_cutouts(original_names, cutID="jades-morph", path_out=None,
 
 def make_cutouts(im, hdr, ra=53.162958332, dec=-27.7901389, sidearcs=300,
                  big_pixel_scales=None):
-    """
+    """Make 2048 x 2048 pixel tiles of a given image.  Optionally only do this
+    for a subregion of the original image.
+
     Parameters
     ----------
     sidearcs : float or ndarray of floats
@@ -61,7 +75,7 @@ def make_cutouts(im, hdr, ra=53.162958332, dec=-27.7901389, sidearcs=300,
         shape = sidearcs / big_pixel_scales
     else:
         # note inverted order
-        shape = np.array([hdr["NAXIS2"], hdr["NAXIS1"]])
+        shape = np.array([hdr["NAXIS2"], hdr["NAXIS1"]]) * pixel_scales / big_pixel_scales
     ntile = (shape // 2048 + (shape % 2048 > 0).astype(int)).astype(int)
     ntile *= np.round(big_pixel_scales/pixel_scales).astype(int)
     shape = 2048 * ntile
@@ -74,22 +88,31 @@ def make_cutouts(im, hdr, ra=53.162958332, dec=-27.7901389, sidearcs=300,
     for x in range(ntile[0]):
         for y in range(ntile[1]):
             pos = (x*2048 + 1024, y*2048 + 1024)
-            tile = Cutout2D(cutout.data, pos, (2048, 2048), wcs=cutout.wcs)
+            try:
+                tile = Cutout2D(cutout.data, pos, (2048, 2048), wcs=cutout.wcs)
+            except(NoOverlapError):
+                tile = None
             tiles.append(tile)
 
     return cutout, tiles, ntile
 
 
 def write_cutout(name, cutout, hdr=None):
+    """Simple wrapper to write cutout data with appropriate wcs information
+    """
+    if cutout is None:
+        return
+    if (np.isfinite(cutout.data).sum() == 0):
+        return
     hdu = fits.PrimaryHDU(cutout.data)
     if hdr:
         hdu.header.update(hdr)
     hdu.header.update(cutout.wcs.to_header())
-    hdu.writeto(name)
+    hdu.writeto(name, overwrite=True)
 
 
-def find_images(loc="/data/groups/comp-astro/jades/hlf/v2.0/",
-                pattern="jades-morph-??-??_*_sci.fits"):
+def find_images(loc="/data/groups/comp-astro/jades/fpho/images/morph/",
+                pattern="jades-morph-??-??_*[WM].fits"):
     search = os.path.join(os.path.expandvars(loc), pattern)
     import glob
     files = glob.glob(search)
@@ -99,6 +122,11 @@ def find_images(loc="/data/groups/comp-astro/jades/hlf/v2.0/",
 
 
 def nameset_to_imset(nameset, zeropoints={}, max_snr=None):
+    """Take a set of image names identifying the science and error images, and
+    produce a named tuple of image data plus header information.  This does some
+    unit conversion (e.g. to compute inverse error from whatever the input is)
+    and, optionally, can impose a S/N cap.
+    """
     # Read the header and set identifiers
     hdr = fits.getheader(nameset.im)
     band, expID = header_to_id(hdr, nameset.im)
@@ -147,12 +175,11 @@ def nameset_to_imset_slopes(nameset, zeropoints={}):
     return imset
 
 
-def mosaic_box(lw_imagename):
-    hdr = fits.getheader(lw_imagename)
+def mosaic_center(hdr):
     wcs = WCS(hdr)
     cx, cy = hdr["NAXIS1"] / 2, hdr["NAXIS2"] / 2
-    pos = wcs.all_pix2world(cx, cy, origin=0)
-    
+    ra, dec = wcs.all_pix2world(cx, cy, 0)
+    return ra, dec
 
 
 if __name__ == "__main__":
@@ -185,7 +212,7 @@ if __name__ == "__main__":
     # -------------------
     # --- read config ---
     config = read_config(args.config_file, args)
-    if args.pixelstorefile is None:
+    if (config.stop_at > 3) and (args.pixelstorefile is None):
         raise ValueError
 
     if config.stop_at == 1:
@@ -197,9 +224,15 @@ if __name__ == "__main__":
         os.makedirs(config.frames_directory, exist_ok=True)
         original = glob.glob(config.original_images)
         original += [o.replace(".fits", "_err.fits") for o in original]
-        original = np.unique(original)
-        cutout_kwargs = dict(big_pixel_scales=np.array([0.06, 0.06]))
-        prep_cutouts(original, cutID=config.cutID, path_out=config.frames_directory,
+        valid = []
+        for o in original:
+            if os.path.exists(o):
+                valid.append(o)
+            else:
+                print(f"Image {o} does not exist!")
+        valid = np.unique(valid)
+        cutout_kwargs = dict(big_pixel_scales=np.array([0.06, 0.06]), sidearcs=None)
+        prep_cutouts(valid, cutID=config.cutID, path_out=config.frames_directory,
                      cutout_kwargs=cutout_kwargs)
 
     if config.stop_at == 2:
@@ -210,6 +243,7 @@ if __name__ == "__main__":
     names = find_images(config.frames_directory,
                         config.frame_search_pattern)
 
+    assert len(names) > 0
     if config.stop_at == 3:
         sys.exit()
 
@@ -228,7 +262,7 @@ if __name__ == "__main__":
 
     # Fill pixel and metastores
     for n in names:
-        im = nameset_to_imset(n, zeropoints=config.zeropoints, max_snr=config.max_snr)
+        im = nameset_to_imset(n, max_snr=config.max_snr)
         pixelstore.add_exposure(im, bitmask=config.bitmask,
                                 do_fluxcal=config.do_fluxcal)
         metastore.add_exposure(im)
