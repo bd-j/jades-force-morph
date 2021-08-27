@@ -20,20 +20,29 @@ headers and WCS) are put in the the meta-data store.
 PSFs
 ----
 
-The PSF Gaussian approximations are fitted to PSFs made from stars in DC2 mosaics.  The parameters of these PSFs are placed in a HDF5 file in the stores/ directory.
+The PSF Gaussian approximations are fitted to PSFs made from stars in DC2 mosaics.  The parameters of these PSFs are placed in a HDF5 file in the `stores/` directory.
 
 
-Lux
----
+Image locations
+--------------
 
-Data locations
+Original slopes are on lux at
+`/data/groups/comp-astro/jades/DC2/Morphology/slopes/`
+and the versions with 'Sandro' format are `*smr.fits`.
+Units should be nJy/pixel
+
+The mosaics are on lux at
+`/data/groups/comp-astro/jades/DC2/mosaics/morph_v1/<BAND>_final/`
+and there are separate images for flux (`<BAND>.fits`), err (`<BAND>_err.fits`), exptime (`<BAND>_exp.fits`), and various convolutions and repixelizations (`<BAND>_conv*.fits`)
+Units should be counts/sec but there should be an "ABMAG" keyword.
 
 ```sh
 # Raw images and cutouts
 export PROJECT_DIR=$HOME/jades-force-morph
 cd $PROJECT_DIR/data/images
-ln -s /data/groups/comp-astro/jades/<FIXME> images
-ln -s /data/groups/comp-astro/jades/<FIXME> cutouts
+mkdir -p /data/groups/comp-astro/jades/fpho/images/jades-morph/cutouts
+ln -s /data/groups/comp-astro/jades/DC2/mosaics/morph_v1/ images
+ln -s /data/groups/comp-astro/jades/fpho/images/jades-morph/cutouts cutouts
 
 # Pixel and meta stores
 cd $PROJECT_DIR/data/stores

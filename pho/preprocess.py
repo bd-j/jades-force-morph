@@ -57,7 +57,11 @@ def make_cutouts(im, hdr, ra=53.162958332, dec=-27.7901389, sidearcs=300,
     pixel_scales = 3600 * proj_plane_pixel_scales(wcs)
     if big_pixel_scales is None:
         big_pixel_scales = pixel_scales
-    shape = sidearcs / big_pixel_scales
+    if sidearcs is not None:
+        shape = sidearcs / big_pixel_scales
+    else:
+        # note inverted order
+        shape = np.array([hdr["NAXIS2"], hdr["NAXIS1"]])
     ntile = (shape // 2048 + (shape % 2048 > 0).astype(int)).astype(int)
     ntile *= np.round(big_pixel_scales/pixel_scales).astype(int)
     shape = 2048 * ntile
@@ -85,11 +89,11 @@ def write_cutout(name, cutout, hdr=None):
 
 
 def find_images(loc="/data/groups/comp-astro/jades/hlf/v2.0/",
-                pattern="udf-??-??_*_sci.fits"):
+                pattern="jades-morph-??-??_*_sci.fits"):
     search = os.path.join(os.path.expandvars(loc), pattern)
     import glob
     files = glob.glob(search)
-    names = [ImageNameSet(im=f, err=f.replace("sci", "wht"), mask=None, bkg=None)
+    names = [ImageNameSet(im=f, err=f.replace(".fits", "_err.fits"), mask=None, bkg=None)
              for f in files]
     return names
 
@@ -108,17 +112,47 @@ def nameset_to_imset(nameset, zeropoints={}, max_snr=None):
     # NOTE: we transpose to get a more familiar order where the x-axis
     # (NAXIS1) is the first dimension and y is the second dimension.
     im = np.array(fits.getdata(nameset.im)).T
-    # WHT images are already inverse variance
-    ierr = np.sqrt(np.array(fits.getdata(nameset.err)).T)
+    # err images are units of uncertainty (sigma)
+    ierr = 1 / np.array(fits.getdata(nameset.err)).T
+    ierr[~np.isfinite(ierr)] = 0.0
     # cap S/N ?
     if max_snr:
         to_cap = (ierr > 0) & (im * ierr > max_snr)
         ierr[to_cap] = max_snr / im[to_cap]
 
     imset = ImageSet(hdr=hdr, band=band, expID=expID, names=nameset,
-                     im=im, ierr=ierr,
-                     mask=None, bkg=None)
+                     im=im, ierr=ierr, mask=None, bkg=None)
     return imset
+
+
+def nameset_to_imset_slopes(nameset, zeropoints={}):
+    # Read the header and set identifiers
+    hdr = fits.getheader(nameset)
+    band, expID = header_to_id(hdr, nameset)
+    # Add the zeropoint
+    try:
+        hdr.update(ABMAG=zeropoints[band])
+    except(KeyError):
+        pass
+
+    # Read data and perform basic operations
+    # NOTE: we transpose to get a more familiar order where the x-axis
+    # (NAXIS1) is the first dimension and y is the second dimension.
+    im = np.array(fits.getdata(nameset, 1)).T
+    ierr = 1 / np.array(fits.getdata(nameset, 2)).T
+    mask = fits.getdata(nameset, 4).T
+    bkg = fits.getdata(nameset, 3).T
+    imset = ImageSet(hdr=hdr, band=band, expID=expID, names=nameset,
+                     im=im, ierr=ierr, mask=mask, bkg=bkg)
+    return imset
+
+
+def mosaic_box(lw_imagename):
+    hdr = fits.getheader(lw_imagename)
+    wcs = WCS(hdr)
+    cx, cy = hdr["NAXIS1"] / 2, hdr["NAXIS2"] / 2
+    pos = wcs.all_pix2world(cx, cy, origin=0)
+    
 
 
 if __name__ == "__main__":
@@ -127,7 +161,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_file", type=str, default="config.yml",
                         help="Location of the configuration YAML file.")
-    parser.add_argument("--original_images", type=str, default="../data/images/v2.0/hlsp*fits",
+    parser.add_argument("--original_images", type=str, default="../data/images/*final/*[WM].fits",
                         help=("If making cutouts, read the original full size "
                               "images (and weights) from this search pattern."))
     parser.add_argument("--cutID", type=str, default="",
@@ -162,6 +196,8 @@ if __name__ == "__main__":
     if getattr(config, "cutID", ""):
         os.makedirs(config.frames_directory, exist_ok=True)
         original = glob.glob(config.original_images)
+        original += [o.replace(".fits", "_err.fits") for o in original]
+        original = np.unique(original)
         cutout_kwargs = dict(big_pixel_scales=np.array([0.06, 0.06]))
         prep_cutouts(original, cutID=config.cutID, path_out=config.frames_directory,
                      cutout_kwargs=cutout_kwargs)
