@@ -3,6 +3,7 @@
 
 import os, glob, sys
 import time
+import logging
 
 import numpy as np
 import argparse
@@ -236,9 +237,12 @@ if __name__ == "__main__":
     if config.stop_at == 1:
         sys.exit()
 
+    logging.basicConfig(level=logging.DEBUG)
+
     # --------------------
     # --- make cutouts ---
     if getattr(config, "cutID", ""):
+        logging.info("Making Cutouts")
         os.makedirs(config.frames_directory, exist_ok=True)
         original = glob.glob(config.original_images)
         original += [o.replace(".fits", "_err.fits") for o in original]
@@ -262,6 +266,7 @@ if __name__ == "__main__":
                         config.frame_search_pattern)
 
     assert len(names) > 0, f"could not find any images matching {config.frame_search_pattern} in {config.frames_directory}"
+    logging.info(f"Found {len(names)} images to store.")
     if config.stop_at == 3:
         sys.exit()
 
@@ -279,6 +284,7 @@ if __name__ == "__main__":
     metastore = MetaStore()
 
     # Fill pixel and metastores
+    logging.info(f"Filling stores at {config.pixelstorefile} and {config.metastorefile}.")
     for n in names:
         im = nameset_to_imset(n, max_snr=config.max_snr)
         pixelstore.add_exposure(im, bitmask=config.bitmask,
@@ -288,4 +294,4 @@ if __name__ == "__main__":
     # Write the filled metastore
     metastore.write_to_file(config.metastorefile)
 
-    print("done in {}s".format(time.time() - t))
+    logging.info("done in {}s".format(time.time() - t))
