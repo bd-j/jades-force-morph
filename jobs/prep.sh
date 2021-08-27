@@ -1,5 +1,4 @@
 #!/bin/bash
-#SBATCH --mail-user=benjamin.johnson@cfa.harvard.edu  # Where to send mail
 #SBATCH --job-name=fpho_jades_prep   # Job name
 #SBATCH --partition=comp-astro       # queue for job submission
 #SBATCH --account=comp-astro         # queue for job submission
@@ -7,7 +6,7 @@
 #SBATCH --nodes=1                    # Number of nodes
 #SBATCH --ntasks-per-node=1          # How many tasks on each node
 #SBATCH --time=3:00:00               # Time limit hrs:min:sec
-#SBATCH --output=hlfprep_%j.log      # Standard output and error log
+#SBATCH --output=morphprep_%j.log      # Standard output and error log
 
 pwd; hostname; date
 
@@ -25,11 +24,12 @@ export PROJECT_DIR=$HOME/jades-force-morph
 source activate fpho
 cd $PROJECT_DIR/pho
 
-config=$PROJECT_DIR/pho/jades-force-morph.yml
-fullsize_ims=$PROJECT_DIR/data/images/mosaics
-cutID=jades-morph
+config=$PROJECT_DIR/pho/morph_mosaic_config.yml
+fullsize_ims=$PROJECT_DIR/data/images/mosaics/*final/*[FM].fits
+cutID=jades-morph-mosaic
 max_snr=100
 
-python preprocess.py --config_file $config --max_snr $max_snr \
+python preprocess.py --config_file $config \
+                     #--max_snr $max_snr \
                      --original_images "$fullsize_ims" --cutID $cutID
 date

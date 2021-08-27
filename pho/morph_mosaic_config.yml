@@ -41,7 +41,7 @@ frame_search_pattern:
 detection_catalog: # full path to input catalog
   $PROJECT_DIR/data/catalogs/detection_table_v0.5.fits
 raw_catalog:
-  $PROJECT_DIR/data/catalogs/hlf_udf_v0.2.fits
+  $PROJECT_DIR/data/catalogs/jades-morph_v0.fits
 do_fluxcal:  # whether to flux calibrate the images using ABMAG keyword
   0
 bitmask: # integer corresponding to the bits of the mask image that constitue "bad" pixels.

@@ -39,10 +39,11 @@ Units should be counts/sec but there should be an "ABMAG" keyword.
 ```sh
 # Raw images and cutouts
 export PROJECT_DIR=$HOME/jades-force-morph
-cd $PROJECT_DIR/data/images
+cd $PROJECT_DIR/data
 mkdir -p /data/groups/comp-astro/jades/fpho/images/jades-morph/cutouts
-ln -s /data/groups/comp-astro/jades/DC2/mosaics/morph_v1/ images
 ln -s /data/groups/comp-astro/jades/fpho/images/jades-morph/cutouts cutouts
+mkdir images
+ln -s /data/groups/comp-astro/jades/DC2/mosaics/morph_v1/ images/mosaics
 
 # Pixel and meta stores
 cd $PROJECT_DIR/data/stores

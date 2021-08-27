@@ -188,7 +188,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_file", type=str, default="config.yml",
                         help="Location of the configuration YAML file.")
-    parser.add_argument("--original_images", type=str, default="../data/images/*final/*[WM].fits",
+    parser.add_argument("--original_images", type=str, default="../data/images/mosaics/*final/*[WM].fits",
                         help=("If making cutouts, read the original full size "
                               "images (and weights) from this search pattern."))
     parser.add_argument("--cutID", type=str, default="",
