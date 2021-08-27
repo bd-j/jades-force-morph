@@ -36,6 +36,8 @@ The mosaics are on lux at
 and there are separate images for flux (`<BAND>.fits`), err (`<BAND>_err.fits`), exptime (`<BAND>_exp.fits`), and various convolutions and repixelizations (`<BAND>_conv*.fits`)
 Units should be counts/sec but there should be an "ABMAG" keyword.
 
+The mosaics have been tiled into 2048x2048 images and converted to HDF5 storage in forcepho format.  Link to the following directories and files to access them:
+
 ```sh
 # Raw images and cutouts
 export PROJECT_DIR=$HOME/jades-force-morph
