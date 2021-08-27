@@ -26,35 +26,46 @@ bandlist:
 #  F090W: 24.04.....
 
 
-# ------------------------------
+# ----------------------------
 # --- exposure backgrounds ---
 # in nJy/pix, to be subtracted from individual exposures
 #tweakbg:
 #  F090W: -0.0511.....
 
-# -----------------------
-# --- Input data locations ---
+# ---------------------
+# --- preprocessing ---
+original_images:
+  $PROJECT_DIR/data/images/mosaics/*final/*[WM].fits
+cutID:
+  jades-morph-mosaic
 frames_directory:  # full path (optional, for preprocessing)
   $PROJECT_DIR/data/cutouts
 frame_search_pattern:
   jades-morph-mosaic-??-??_*[WM].fits
-detection_catalog: # full path to input catalog
-  $PROJECT_DIR/data/catalogs/detection_table_v0.5.fits
-raw_catalog:
-  $PROJECT_DIR/data/catalogs/jades-morph_v0.fits
+max_snr:
+  0
 do_fluxcal:  # whether to flux calibrate the images using ABMAG keyword
   0
 bitmask: # integer corresponding to the bits of the mask image that constitue "bad" pixels.
   1
+
+detection_catalog: # full path to input catalog
+  $PROJECT_DIR/data/catalogs/detection_table_v0.5.fits
+
+
+# ----------------------------
+# --- Input data locations ---
+raw_catalog:
+  $PROJECT_DIR/data/catalogs/jades-morph_v0.fits
 
 store_directory:
   $PROJECT_DIR/data/stores
 splinedatafile:
   $PROJECT_DIR/data/stores/sersic_mog_model.smooth=0.0150.h5
 pixelstorefile:
-  pixels_jades-morph.h5
+  pixels_jades-morph-mosaic.h5
 metastorefile:
-  meta_jades-morph.json
+  meta_jades-morph-mosaic.json
 psfstorefile:
   psf_jades_ng4.h5
 

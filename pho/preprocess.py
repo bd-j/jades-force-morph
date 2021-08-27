@@ -126,6 +126,15 @@ def nameset_to_imset(nameset, zeropoints={}, max_snr=None):
     produce a named tuple of image data plus header information.  This does some
     unit conversion (e.g. to compute inverse error from whatever the input is)
     and, optionally, can impose a S/N cap.
+
+    Parameters
+    ----------
+    nameset : instance of ImageNameSet
+        A named tuple or namespace with attributes `im`, `err`
+
+    Returns
+    -------
+    imageset : instance of ImageSet
     """
     # Read the header and set identifiers
     hdr = fits.getheader(nameset.im)
@@ -154,6 +163,15 @@ def nameset_to_imset(nameset, zeropoints={}, max_snr=None):
 
 
 def nameset_to_imset_slopes(nameset, zeropoints={}):
+    """
+    Parameters
+    ----------
+    nameset : string
+
+    Returns
+    -------
+    imageset : instance of ImageSet
+    """
     # Read the header and set identifiers
     hdr = fits.getheader(nameset)
     band, expID = header_to_id(hdr, nameset)
@@ -188,14 +206,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_file", type=str, default="config.yml",
                         help="Location of the configuration YAML file.")
-    parser.add_argument("--original_images", type=str, default="../data/images/mosaics/*final/*[WM].fits",
+    parser.add_argument("--original_images", type=str, default=None,
                         help=("If making cutouts, read the original full size "
                               "images (and weights) from this search pattern."))
-    parser.add_argument("--cutID", type=str, default="",
+    parser.add_argument("--cutID", type=str, default=None,
                         help=("If supplied, generate cutout images and 2048x2048 "
                               "pixel tiles with this prefix in the "
                               "`config.frames_directory` location"))
-    parser.add_argument("--max_snr", type=float, default=0,
+    parser.add_argument("--max_snr", type=float, default=None,
                         help="Force max S/N to this value by altering the noise values")
     parser.add_argument("--snr_thresh", type=float, default=0,
                         help="Adjust S/N when larger than this.")
@@ -243,7 +261,7 @@ if __name__ == "__main__":
     names = find_images(config.frames_directory,
                         config.frame_search_pattern)
 
-    assert len(names) > 0, f"could not find images match {config.frame_search_pattern} in {config.frames_directory}"
+    assert len(names) > 0, f"could not find any images matching {config.frame_search_pattern} in {config.frames_directory}"
     if config.stop_at == 3:
         sys.exit()
 

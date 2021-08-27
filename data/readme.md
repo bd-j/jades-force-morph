@@ -47,6 +47,6 @@ ln -s /data/groups/comp-astro/jades/DC2/mosaics/morph_v1/ images/mosaics
 
 # Pixel and meta stores
 cd $PROJECT_DIR/data/stores
-ln -s /data/groups/comp-astro/jades/fpho/stores/pixels_jades-morph.h5 pixels_jades-morph.h5
-ln -s /data/groups/comp-astro/jades/fpho/stores/meta_jades-morph.json meta_jades-morph.json
+ln -s /data/groups/comp-astro/jades/fpho/stores/pixels_jades-morph-mosaic.h5 pixels_jades-morph-mosaic.h5
+ln -s /data/groups/comp-astro/jades/fpho/stores/meta_jades-morph-mosaic.json meta_jades-morph-mosaic.json
 ```

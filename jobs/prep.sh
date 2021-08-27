@@ -24,11 +24,9 @@ export PROJECT_DIR=$HOME/jades-force-morph
 cd $PROJECT_DIR/pho
 
 config=$PROJECT_DIR/pho/morph_mosaic_config.yml
-fullsize_ims=$PROJECT_DIR/data/images/mosaics/*final/*[FM].fits
-cutID=jades-morph-mosaic
-max_snr=100
+#fullsize_ims=$PROJECT_DIR/data/images/mosaics/*final/*[WM].fits
+#cutID=jades-morph-mosaic
+#max_snr=100
 
-python preprocess.py --config_file $config \
-                     --original_images "$fullsize_ims" --cutID $cutID
-                     #--max_snr $max_snr \
+python preprocess.py --config_file $config
 date
