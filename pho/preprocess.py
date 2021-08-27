@@ -89,7 +89,7 @@ def make_cutouts(im, hdr, ra=53.162958332, dec=-27.7901389, sidearcs=300,
         for y in range(ntile[1]):
             pos = (x*2048 + 1024, y*2048 + 1024)
             try:
-                tile = Cutout2D(cutout.data, pos, (2048, 2048), wcs=cutout.wcs)
+                tile = Cutout2D(cutout.data, pos, (2048, 2048), wcs=cutout.wcs, mode="partial")
             except(NoOverlapError):
                 tile = None
             tiles.append(tile)
@@ -243,7 +243,7 @@ if __name__ == "__main__":
     names = find_images(config.frames_directory,
                         config.frame_search_pattern)
 
-    assert len(names) > 0
+    assert len(names) > 0, f"could not find images match {config.frame_search_pattern} in {config.frames_directory}"
     if config.stop_at == 3:
         sys.exit()
 

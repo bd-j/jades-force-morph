@@ -21,7 +21,6 @@ module load littlemcmc
 module load openmpi mpi4py
 
 export PROJECT_DIR=$HOME/jades-force-morph
-source activate fpho
 cd $PROJECT_DIR/pho
 
 config=$PROJECT_DIR/pho/morph_mosaic_config.yml
@@ -30,6 +29,6 @@ cutID=jades-morph-mosaic
 max_snr=100
 
 python preprocess.py --config_file $config \
-                     #--max_snr $max_snr \
                      --original_images "$fullsize_ims" --cutID $cutID
+                     #--max_snr $max_snr \
 date
