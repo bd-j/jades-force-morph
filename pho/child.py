@@ -10,7 +10,7 @@ from forcepho.utils import write_residuals
 from utils import optimize_linear, dump_design_matrices
 
 
-def write_to_disk(out, model, outroot, config):
+def write_to_disk(out, outroot, model, config):
 
     # --- write the chain and meta-data for this task ---
     outfile = f"{outroot}_samples.h5"
