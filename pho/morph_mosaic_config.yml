@@ -14,7 +14,7 @@ bandlist:
  - F200W
  - F277W
  - F335M
- - F336W
+ - F356W
  - F410M
  - F444W
 
@@ -112,7 +112,7 @@ max_active_fraction:
 maxactive_per_patch:
   15
 patch_maxradius:  # in arcsec
-  15
+  20
 target_niter:
   256
 ntry_checkout:

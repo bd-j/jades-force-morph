@@ -2,7 +2,7 @@
 
 """utils.py - utilities for conducting fits.
 """
-
+import os
 import logging
 import numpy as np
 import h5py

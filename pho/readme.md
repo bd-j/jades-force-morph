@@ -1,7 +1,7 @@
 config file
 -----------
 
-`morph_config.py` - Basic configuration file.  Note that you must set the environment variable `PROJECT_DIR`
+`morph_mosaic_config.py` - Basic configuration file.  Note that you must set the environment variable `PROJECT_DIR`
 
 ```sh
 export PROJECT_DIR=/path/to/jades-force-morph
@@ -34,10 +34,9 @@ Steps
    This creates the HDF5 storage files for pixel and meta-data.
    If slopes are present, make separate stores for mosaic and slope pixels.
 
-
 3. Create initial catalog (`smallcat.py`)
 
-   Makes some small tweaks to the detection catalog values (e.g. reversing
+   Makes some small tweaks to the initial detection catalog values (e.g. reversing
    sign of PA). Use the result as `raw_catalog` in the config file.
 
 4. Background subtraction & optimization loop

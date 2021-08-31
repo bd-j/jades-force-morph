@@ -48,7 +48,7 @@ if __name__ == "__main__":
     # --- Arguments ---
     parser = argparse.ArgumentParser()
     # input
-    parser.add_argument("--config_file", type=str, default="./hlf_config.yml")
+    parser.add_argument("--config_file", type=str, default="./morph_mosaic_config.yml")
     parser.add_argument("--raw_catalog", type=str, default=None)
     parser.add_argument("--seed_index", type=int, default=-1)
     parser.add_argument("--maxactive_per_patch", type=int, default=None)

@@ -7,7 +7,7 @@ Data for jades-force-morph
 
 * `stores/` HDF5 data stores used by forcepho
 
-* `catalogs/`
+* `catalogs/` SEP detection catalogs, rectified initialization catalogs
 
 Image data consists of mosaics (and slopes?) produced by guitarra and the mosaicing pipeline.
 
@@ -21,6 +21,20 @@ PSFs
 ----
 
 The PSF Gaussian approximations are fitted to PSFs made from stars in DC2 mosaics.  The parameters of these PSFs are placed in a HDF5 file in the `stores/` directory.
+
+
+Initial Catalog locations
+-------------------------
+There are SEP based detection catalogs at
+`/data/groups/comp-astro/jades/DC2/photometry/morph_v1/*hd*/*fits`
+
+```sh
+export PROJECT_DIR=$HOME/jades-force-morph
+mkdir -p $PROJECT_DIR/data/catalogs
+cd $PROJECT_DIR/data/catalogs
+ln -s /data/groups/comp-astro/jades/DC2/photometry/morph_v1/output.hd.all/hd_all.cat.fits hd_all.cat.fits
+ln -s /data/groups/comp-astro/jades/DC2/photometry/morph_v1/output.hd/hd.cat.fits hd.cat.fits
+```
 
 
 Image locations

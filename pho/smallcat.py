@@ -80,20 +80,29 @@ def mask_big(cat, roi, bands, ng_max=14, r_max=2.0):
     valid = (~inmulti) & (~inbig)
     return valid
 
+def jades_pipe_to():
+    pass
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_file", type=str, default="./hlf_config.yml")
-    parser.add_argument("--detection_catalog", type=str, default=None)
-    parser.add_argument("--bright_catalog", type=str, default=None)
-    parser.add_argument("--output_catalog", type=str, default="smallcat.fits")
+    # Input
+    parser.add_argument("--config_file", type=str, default="./morph_mosaic_config.yml")
+    parser.add_argument("--detection_catalog", type=str, default="../data/catalogs/hd_all.cat.fits")
+    parser.add_argument("--output_catalog", type=str, default="initial_catalog.fits")
+    parser.add_argument("--flux_type", type=str, default="KRON",
+                        choices=["KRON", "CIRC1", "CIRC2", "CIRC3", "CIRC4"])
+    # Basic selection
     parser.add_argument("--snr_threshold", type=float, default=0)
     parser.add_argument("--center", type=float, nargs="*", default=None)
     parser.add_argument("--seed", type=int, default=-1)
     parser.add_argument("--n_source", type=int, default=0)
+    # Advanced Masking
+    parser.add_argument("--bright_catalog", type=str, default=None)
     parser.add_argument("--mask_stars", type=int, default=0)
     parser.add_argument("--mask_big", type=int, default=0,
                         help="Whether to mask large objects and objects part of large groups")
+    # Other
     parser.add_argument("--pixel_scale", type=float, default=0.03)
     parser.add_argument("--threshold", type=float, default=0.1,
                         help="Flux per pixel defining the isophote (catalog units, usually nJy)")
@@ -104,7 +113,11 @@ if __name__ == "__main__":
     bands = (config.bandlist).tolist()
     det = fits.getdata(config.detection_catalog)
     dhdr = fits.getheader(config.detection_catalog)
-    dbands = [b.strip() for b in dhdr["FILTERS"].split(",")]
+    try:
+        config.pixel_scale = dhdr["DPIXSCAL"]
+    except(KeyError):
+        pass
+
 
     # --- Create catalog and fill columns ---
     # ---------------------
@@ -116,8 +129,9 @@ if __name__ == "__main__":
     cat["q"] = np.sqrt(det["B"] / det["A"])
     cat["pa"] = det["PA"]
     cat["sersic"] = 2.0
-    cat["rhalf"] = det["R_KRON"] / 1.5
+    cat["rhalf"] = det["A"] * config.pixel_scale
     ind = 0
+    snr = {}
 
     # rotate by +90 degrees, but keep in -90, +90 interval
     #p = cat["pa"] > 0
@@ -125,28 +139,33 @@ if __name__ == "__main__":
     # reverse: SEP measures (-pi/2, pi/2) CCW from +x, fpho needs (-pi/2, pi/2) North of East
     cat["pa"] *= -1
 
-    if "FLUX_AP2" in det.dtype.names:
-        fcol = "FLUX_AP2"
-        config.aperture_radius = 0.5
+    if config.flux_type == "KRON":
+        ftype = "KRON"
+        config.aperture_radius = det["R_KRON"] * config.pixel_scale
     else:
-        fcol = "FLUX"
-        config.aperture_radius = det["R_KRON"]
+        ftype = config.flux_type
+        config.aperture_radius = dhdr[f"F200WRC{ftype[-1]}"]
+
+    sel = np.ones(len(cat), dtype=bool)
 
     for b in bands:
-        zp = config.zeropoints[b]
-        conv = 1e9 * 10**(0.4 * (8.9 - zp))
-        try:
-            ind = dbands.index(b)
-        except(ValueError):
-            print(f"Using flux of {dbands[ind]} for {b}")
-        cat[b] = det[fcol][:, ind] * conv
+        conv = 1.0  # fluxes already in nJy
+        fcol = f"{b.upper()}_{ftype}"
+        cat[b] = det[fcol] * conv
+        snr[b] = det[fcol] / det[f"{fcol}_e"]
+        sel = sel & np.isfinite(snr[b])
+
+    # --- Get ROI ---
+    # ---------------
+    config.sersic = 1
+    roi = max_roi(cat, bands, threshold=config.threshold,
+                  pixel_scale=config.pixel_scale, flux_radius=config.aperture_radius)
 
     # --- Select on S/N ---
     # ---------------------
-    sel = np.ones(len(cat), dtype=bool)
     if config.snr_threshold:
-        snr = det[fcol] / det[f"{fcol}_e"]
-        sel = sel & np.any(snr > config.snr_threshold, axis=-1)
+        snr_array = np.array([snr[b] > config.snr_threshold for b in bands])
+        sel = sel & np.any(snr_array, axis=0)
 
     # --- Select on location ---
     # --------------------------
@@ -162,14 +181,10 @@ if __name__ == "__main__":
         dmax = dist[sel][oo][config.n_source]
         sel = sel & (dist <= dmax)
     print(f"Selected {sel.sum()} sources within {dmax:0.2f} arcsec")
-    cat = cat[sel]
 
-    # --- Get ROI ---
-    # ---------------
+    cat = cat[sel]
+    roi = roi[sel]
     valid = np.ones(len(cat), dtype=bool)
-    config.sersic = 1
-    roi = max_roi(cat, bands, threshold=config.threshold,
-                  pixel_scale=config.pixel_scale, flux_radius=config.aperture_radius)
 
     # --- Mask stars, bright, and big ---
     # --------------------------
@@ -182,7 +197,7 @@ if __name__ == "__main__":
         valid = valid & notbig
         print(f"removed {(~notbig).sum()} big sources")
 
-    if config.bright_catalog:
+    if getattr(config, "bright_catalog", None):
         # --- HACK ---
         # These are things affected by the bright objects
         big = roi > 2.0
@@ -216,7 +231,7 @@ if __name__ == "__main__":
         roi = np.concatenate([roi, broi])
 
     cat["roi"] = roi
-    regname = args.small_catalog.replace(".fits", "_roi.reg")
+    regname = args.output_catalog.replace(".fits", "_roi.reg")
     regions = cat_to_reg(cat, slist=regname, roi=roi, valid=valid, ellipse=True, showid=True)
 
     ocat = cat[valid]
@@ -229,4 +244,4 @@ if __name__ == "__main__":
     hdr["BIGMSK"] = config.mask_big
     hdr["SEEDID"] = config.seed
     full = fits.HDUList([fits.PrimaryHDU(header=hdr), table])
-    full.writeto(config.small_catalog, overwrite=True)
+    full.writeto(config.output_catalog, overwrite=True)
