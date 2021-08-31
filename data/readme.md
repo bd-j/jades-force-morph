@@ -25,6 +25,7 @@ The PSF Gaussian approximations are fitted to PSFs made from stars in DC2 mosaic
 
 Initial Catalog locations
 -------------------------
+
 There are SEP based detection catalogs at
 `/data/groups/comp-astro/jades/DC2/photometry/morph_v1/*hd*/*fits`
 

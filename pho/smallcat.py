@@ -186,6 +186,12 @@ if __name__ == "__main__":
     roi = roi[sel]
     valid = np.ones(len(cat), dtype=bool)
 
+    # --- Remove duplicates? ---
+    # --------------------------
+    if config.dedupe:
+        
+
+
     # --- Mask stars, bright, and big ---
     # --------------------------
     if config.mask_stars:
