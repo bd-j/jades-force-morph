@@ -22,7 +22,7 @@ module load openmpi mpi4py
 
 export PROJECT_DIR=$HOME/jades-force-morph
 config=$PROJECT_DIR/pho/morph_config.yml
-catalog=$PROJECT_DIR/data/initial_catalog.fits
+catalog=$PROJECT_DIR/data/catalogs/initial_catalog.fits
 outbase=$PROJECT_DIR/output/optimization_v1
 
 echo "Running optimization test for $config"
