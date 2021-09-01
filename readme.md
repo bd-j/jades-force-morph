@@ -19,8 +19,10 @@ Install:
 cd $HOME
 module load git
 git clone https://github.com/bd-j/forcepho
-cd forcepho
 
+# can re-run this block to update forcepho
+cd $HOME/forcepho
+git pull
 module purge
 module load cuda10.1 python/3.6.7 numpy hdf5 git slurm
 python setup.py install --user
