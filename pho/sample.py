@@ -42,7 +42,7 @@ def do_child(patcher, task, config=None):
         answer = sampling_task(patcher, task, config, logger)
 
         # --- blocking send to parent, free GPU memory ---
-        logger.info(f"Child {rank} sent answer for patch {taskID}")
+        logger.info(f"Sent results for patch {task['taskID']} with RA={region.ra}")
 
     return answer
 
