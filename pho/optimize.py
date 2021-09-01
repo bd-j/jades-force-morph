@@ -145,3 +145,5 @@ if __name__ == "__main__":
 
         # writeout after every patch in case we have to interrupt
         sceneDB.writeout()
+
+    logger.info(f'SuperScene is done, parent is finished, shutting down.')

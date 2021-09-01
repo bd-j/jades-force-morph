@@ -28,7 +28,7 @@ def write_to_disk(out, outroot, model, config):
         write_residuals(model.patch, outfile, residuals=residual)
 
 
-def optimization_task(patcher, task, config=None, logger=None):
+def optimization_task(patcher, task, config=None, logger=None, disp=False):
 
     # --- unpack all the task variables ---
     region, active, fixed = task['region'], task['active'], task['fixed']
@@ -61,7 +61,7 @@ def optimization_task(patcher, task, config=None, logger=None):
     model.ndof = patcher.npix
     model.sampling = False
     opt, scires = run_opt(model, q.copy(), jac=config.use_gradients,
-                          disp=True, gtol=config.gtol)
+                          disp=disp, gtol=config.gtol)
 
     # --- clean up ---
     model.sampling = True
