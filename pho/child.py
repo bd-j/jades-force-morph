@@ -10,7 +10,7 @@ from forcepho.utils import write_residuals
 from utils import optimize_linear, dump_design_matrices
 
 
-def write_to_disk(out, outroot, model, config):
+def write_to_disk(out, outroot, model, config, residual=None):
 
     # --- write the chain and meta-data for this task ---
     outfile = f"{outroot}_samples.h5"
@@ -23,8 +23,9 @@ def write_to_disk(out, outroot, model, config):
     # --- Write image data and residuals if requested ---
     if config.write_residuals:
         outfile = f"{outroot}_residuals.h5"
-        q = out.chain[-1, :]  # last position in chain
-        residual = model.residuals(q)
+        if residual is None:
+            q = out.chain[-1, :]  # last position in chain
+            residual = model.residuals(q)
         write_residuals(model.patch, outfile, residuals=residual)
 
 
@@ -72,6 +73,7 @@ def optimization_task(patcher, task, config=None, logger=None, disp=False):
     final, _ = out.fill(region, active, fixed, model, bounds=bounds,
                         step=step, stats=stats, patchID=taskID)
     out.linear_optimized = False
+    residual = model.residuals(out.chain[-1, :])
 
     # --- linear flux optimization conditional on shapes ---
     if config.linear_optimize:
@@ -100,7 +102,7 @@ def optimization_task(patcher, task, config=None, logger=None, disp=False):
     # --- write ---
     outroot = os.path.join(config.patch_dir, f"patch{taskID}")
     logger.info(f"Writing to {outroot}*")
-    write_to_disk(out, outroot, model, config)
+    write_to_disk(out, outroot, model, config, residual=residual)
 
     # --- develop the payload ---
     payload = dict(out=out, final=final, covs=None, bounds=bounds)

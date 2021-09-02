@@ -4,8 +4,6 @@ Jades-force-morph
 Applying forcepho to JADES simulated images to test morphology estimates.
 
 
-
-
 Install on lux
 --------------------
 

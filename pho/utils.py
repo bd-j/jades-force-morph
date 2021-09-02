@@ -112,17 +112,6 @@ def set_band_backgrounds(patcher, config):
     return patcher
 
 
-def untouched_scene(active, fixed):
-    new_inds = active["n_iter"] == 0
-    old = active[~new_inds]
-    if fixed is not None:
-        old = np.concatenate([fixed, old])
-    if len(old) == 0:
-        old = None
-    new = active[new_inds]
-    return new, old, new_inds
-
-
 def adjust_bounds(sceneDB, bands, config):
     # --- Adjust initial bounds ---
     if config.minflux is not None:
@@ -136,6 +125,17 @@ def adjust_bounds(sceneDB, bands, config):
             new_upper = np.maximum(upper, sceneDB.sourcecat[b] * config.maxfluxfactor)
             sceneDB.bounds_catalog[b][:, 1] = new_upper
     return sceneDB
+
+
+def untouched_scene(active, fixed):
+    new_inds = active["n_iter"] == 0
+    old = active[~new_inds]
+    if fixed is not None:
+        old = np.concatenate([fixed, old])
+    if len(old) == 0:
+        old = None
+    new = active[new_inds]
+    return new, old, new_inds
 
 
 def optimize_linear(patcher, active, bounds, fixed=None,

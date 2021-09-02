@@ -33,13 +33,13 @@ bandlist:
 # ---------------------
 # --- preprocessing ---
 original_images:
-  $PROJECT_DIR/data/images/mosaics/*final/*[WM].fits
+  $PROJECT_DIR/data/images/slopes/*smr.fits
 cutID:
-  jades-morph-mosaic
+  # no cutID since don't need to make cutouts
 frames_directory:  # full path (optional, for preprocessing)
-  $PROJECT_DIR/data/cutouts
+  $PROJECT_DIR/data/images/slopes/
 frame_search_pattern:
-  jades-morph-mosaic-??-??_*[WM].fits
+  "*smr.fits"
 max_snr:
   0
 do_fluxcal:  # whether to flux calibrate the images using ABMAG keyword
@@ -59,16 +59,16 @@ store_directory:
 splinedatafile:
   $PROJECT_DIR/data/stores/sersic_mog_model.smooth=0.0150.h5
 pixelstorefile:
-  pixels_jades-morph-mosaic.h5
+  pixels_jades-morph-slopes.h5
 metastorefile:
-  meta_jades-morph-mosaic.json
+  meta_jades-morph-slopes.json
 psfstorefile:
   psf_jades_ng4.h5
 
 # ------------------------
 # --- Output locations
 outbase:
-  ../output/test
+  ../output/test_slopes
 scene_catalog:
   outscene.fits
 

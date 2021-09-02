@@ -37,7 +37,6 @@ ln -s /data/groups/comp-astro/jades/DC2/photometry/morph_v1/output.hd.all/hd_all
 ln -s /data/groups/comp-astro/jades/DC2/photometry/morph_v1/output.hd/hd.cat.fits hd.cat.fits
 ```
 
-
 Image locations
 --------------
 
@@ -57,10 +56,11 @@ The mosaics have been tiled into 2048x2048 images and converted to HDF5 storage 
 # Raw images and cutouts
 export PROJECT_DIR=$HOME/jades-force-morph
 cd $PROJECT_DIR/data
-mkdir -p /data/groups/comp-astro/jades/fpho/images/jades-morph/cutouts
-ln -s /data/groups/comp-astro/jades/fpho/images/jades-morph/cutouts cutouts
 mkdir images
 ln -s /data/groups/comp-astro/jades/DC2/mosaics/morph_v1/ images/mosaics
+ln -s /data/groups/comp-astro/jades/DC2/Morphology/slopes/ images/slopes
+mkdir -p /data/groups/comp-astro/jades/fpho/images/jades-morph/cutouts
+ln -s /data/groups/comp-astro/jades/fpho/images/jades-morph/cutouts cutouts
 
 # Pixel and meta stores
 cd $PROJECT_DIR/data/stores
