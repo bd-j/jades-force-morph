@@ -32,9 +32,6 @@ def prep_cutouts(original_names, cutID="jades-morph", path_out=None,
     """
     for i, n in enumerate(original_names):
         im, hdr = fits.getdata(n), fits.getheader(n)
-        if i == 0:
-            ra, dec = mosaic_center(hdr)
-            cutout_kwargs.update(dict(ra=ra, dec=dec))
         cutout, tiles, nt = make_cutouts(im, hdr, **cutout_kwargs)
 
         # construct the filenames
@@ -251,9 +248,11 @@ if __name__ == "__main__":
             if os.path.exists(o):
                 valid.append(o)
             else:
-                print(f"Image {o} does not exist!")
+                logging.error(f"Image {o} does not exist!")
         valid = np.unique(valid)
-        cutout_kwargs = dict(big_pixel_scales=np.array([0.06, 0.06]), sidearcs=None)
+        hdr = fits.getheader(valid[0])
+        ra, dec = mosaic_center(hdr)
+        cutout_kwargs = dict(big_pixel_scales=np.array([0.06, 0.06]), sidearcs=None, ra=ra, dec=dec)
         prep_cutouts(valid, cutID=config.cutID, path_out=config.frames_directory,
                      cutout_kwargs=cutout_kwargs)
 
@@ -264,8 +263,8 @@ if __name__ == "__main__":
     # --- Find Images ---
     names = find_images(config.frames_directory,
                         config.frame_search_pattern)
-
-    assert len(names) > 0, f"could not find any images matching {config.frame_search_pattern} in {config.frames_directory}"
+    assert len(names) > 0, (f"could not find any images matching
+                             {config.frame_search_pattern} in {config.frames_directory}")
     logging.info(f"Found {len(names)} images to store.")
     if config.stop_at == 3:
         sys.exit()

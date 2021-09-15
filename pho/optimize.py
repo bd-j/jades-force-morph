@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""optimal_all.py - Do optimization of source parameters in each patch,
+"""optimize.py - Do optimization of source parameters in each patch,
 with linear optimization of fluxes conditional on shapes at the end.
 """
 

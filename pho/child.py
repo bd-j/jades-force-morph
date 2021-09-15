@@ -76,6 +76,8 @@ def optimization_task(patcher, task, config=None, logger=None, disp=False):
     residual = model.residuals(out.chain[-1, :])
 
     # --- linear flux optimization conditional on shapes ---
+    # Note this messes with the patcher reference coordinates,
+    # as well as the data arrays
     if config.linear_optimize:
         logger.info(f"Doing linear optimization of fluxes")
         postop = final.copy()
@@ -98,6 +100,12 @@ def optimization_task(patcher, task, config=None, logger=None, disp=False):
         out.new_bounds = bounds
         out.postop = postop
         # TODO: Add `final` parameter vector as another iteration of chain
+        #ss = patcher.set_scene(final)
+        #q = ss.get_all_source_params()
+        # We need to do this because the linear optimization messed with the patcher and left it dirty
+        #model, q = patcher.prepare_model(active=final, fixed=fixed, bounds=bounds, shapes=shape_cols)
+        #residual = model.residuals(q)
+        #out.chain = np.concatenate(out.chain, q)
 
     # --- write ---
     outroot = os.path.join(config.patch_dir, f"patch{taskID}")
@@ -110,9 +118,13 @@ def optimization_task(patcher, task, config=None, logger=None, disp=False):
     return payload
 
 
+def update_out(out, final, new_bounds):
+    pass
+
+
 def sampling_task(patcher, task, config=None, logger=None):
 
-   # --- unpack all the task variables ---
+    # --- unpack all the task variables ---
     region, active, fixed = task['region'], task['active'], task['fixed']
     bounds, cov = task['bounds'], task['cov']
     bands, shape_cols = task['bands'], task['shape_cols']

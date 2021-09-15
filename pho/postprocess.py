@@ -182,7 +182,7 @@ def write_images(root, subdir="image", metafile=None, show_model=False, show_chi
 
 
 def write_sourcereg(root, slist="sources.reg", showid=False,
-                    isophote=("F160W", 0.1/(0.06**2))):
+                    isophote=("F277W", 0.1/(0.06**2))):
     """
     Parameters
     ----------

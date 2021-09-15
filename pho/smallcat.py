@@ -189,8 +189,7 @@ if __name__ == "__main__":
     # --- Remove duplicates? ---
     # --------------------------
     if config.dedupe:
-        
-
+        pass
 
     # --- Mask stars, bright, and big ---
     # --------------------------
