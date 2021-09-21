@@ -84,6 +84,7 @@ def accomplish_task(patcher, task, config=None, logger=None,
         logger.info(f"Doing linear optimization of fluxes")
         final, bounds, out = lsq_optimize(patcher, start=final, out=out,
                                           logger=logger, config=config, taskID=taskID)
+        out.final = final
 
     # --- write ---
     outroot = os.path.join(config.patch_dir, f"patch{taskID}")
@@ -97,6 +98,9 @@ def accomplish_task(patcher, task, config=None, logger=None,
 
 
 def optimization(model, start, cov=None, config=None, logger=None, disp=False, **extras):
+
+    logger.info(f"Beginning optimization.")
+
     # --- Run fit/optimization ---
     model.sampling = False
     opt, scires = run_opt(model, start.copy(), jac=config.use_gradients,
@@ -116,6 +120,9 @@ def optimization(model, start, cov=None, config=None, logger=None, disp=False, *
 
 
 def sampling(model, start, cov=None, config=None, logger=None, weight=10, **extras):
+
+    logger.info(f"Beginning sampling with weight={weight}.")
+
     try:
         discard_tuning = bool(getattr(config, "discard_tuning", True))
         out, step, stats = run_lmc(model, start.copy(),
@@ -164,7 +171,7 @@ def lsq_optimize(patcher, start=None, out=None, factor=3,
             abort_lsq(design, result, patcher, logger=logger, badband=i)
             return start, preop_bounds, out
 
-        lo, hi = flux_bounds(f, factor)#, precisions=precisions[i])
+        lo, hi = flux_bounds(f, factor, precisions=precisions[i])
         if np.any(~np.isfinite(lo)) or np.any(~np.isfinite(lo)):
             logger.info(f"could not create valid bounds for band {b} with fluxes {f}")
             continue
@@ -188,6 +195,7 @@ def lsq_optimize(patcher, start=None, out=None, factor=3,
     out.preop = preop
     out.bounds = bounds
     out.postop = final
+    out.precisions = np.array(precisions)
 
     # Now reset the data and such on the GPU
     patcher._dirty_data = False
