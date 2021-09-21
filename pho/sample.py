@@ -16,7 +16,7 @@ import numpy as np
 from forcepho.utils import NumpyEncoder, read_config
 
 from utils import get_superscene, get_patcher
-from child import sampling_task
+from child import accomplish_task, sampling
 
 try:
     import pycuda
@@ -39,10 +39,11 @@ def do_child(patcher, task, config=None):
             break
 
         taskID = task["taskID"]
-        answer = sampling_task(patcher, task, config, logger)
+        answer = accomplish_task(patcher, task, config, logger,
+                                 method=sampling)
 
         # --- blocking send to parent, free GPU memory ---
-        logger.info(f"Sent results for patch {task['taskID']} with RA={region.ra}")
+        logger.info(f"Child {rank} sent answer for patch {taskID}")
 
     return answer
 

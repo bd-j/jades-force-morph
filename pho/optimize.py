@@ -16,7 +16,7 @@ import numpy as np
 from forcepho.utils import NumpyEncoder, read_config
 
 from utils import get_superscene, get_patcher
-from child import optimization_task
+from child import accomplish_task, optimization
 
 try:
     import pycuda
@@ -35,7 +35,8 @@ def do_child(patcher, task, config=None):
         if task is None:
             break
 
-        answer = optimization_task(patcher, task, config, logger)
+        answer = accomplish_task(patcher, task, config, logger,
+                                 method=optimization)
 
         # --- blocking send to parent, free GPU memory ---
         logger.info(f"Sent results for patch {task['taskID']} with RA={region.ra}")
@@ -121,7 +122,8 @@ if __name__ == "__main__":
 
         # build the chore
         bounds, cov = sceneDB.bounds_and_covs(active["source_index"])
-        chore = {'region': region, 'active': active, 'fixed': fixed,
+        chore = {'region': region,
+                 'active': active, 'fixed': fixed, 'big': None,
                  'bounds': bounds, 'cov': cov, 'taskID': taskID,
                  'bands': bands, 'shape_cols': sceneDB.shape_cols}
 

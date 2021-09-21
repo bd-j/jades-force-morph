@@ -2,6 +2,7 @@
 
 """utils.py - utilities for conducting fits.
 """
+
 import os
 import logging
 import numpy as np
@@ -10,19 +11,17 @@ import h5py
 from astropy.coordinates import SkyCoord
 
 from forcepho.superscene import LinkedSuperScene
-from forcepho.superscene import isophotal_radius, flux_bounds
-from forcepho.fitting import optimize_fluxes, design_matrix
+from forcepho.superscene import isophotal_radius
 from forcepho.utils import rectify_catalog
 from forcepho.patches import JadesPatch
 
 
-__all__ = ["get_superscene", "get_patcher",
-           "adjust_bounds",
-           "set_band_backgrounds",
-           "optimize_linear", "dump_design_matrices",
+__all__ = ["get_superscene", "get_patcher", "get_bigscene"
+           "adjust_bounds", "set_band_backgrounds",
            "untouched_scene",
            "dilate_sersic",
-           "max_roi", "get_roi"]
+           "cat_to_reg",
+           "in_isophotes", "max_roi", "get_roi"]
 
 
 def get_superscene(config, logger, **rectify_kwargs):
@@ -64,21 +63,20 @@ def get_patcher(config, logger):
     return patcher
 
 
-def get_bigscene(ra, dec, radius, bigDB):
+def get_bigscene(config):
 
+    catname = getattr(config, "big_catalog", None)
+    if not catname:
+        return None
     cat, bands, chdr = rectify_catalog(config.big_catalog)
     bands = [b for b in bands if b in config.bandlist]
-    roi = r_iso
+    roi = cat["roi"]
     bigDB = LinkedSuperScene(sourcecat=cat, bands=bands,
-                             maxactive_per_patch=50,
+                             maxactive_per_patch=100,
                              maxradius=100,
                              roi=roi)
 
     return bigDB
-
-    center = bigDB.sky_to_scene(ra, dec)
-    overlaps = bigDB.find_overlaps(center, radius)
-    return bigDB.sourcecat[overlaps]
 
 
 def dilate_sersic(in_file, out_file, dilation=10.0):
@@ -136,78 +134,6 @@ def untouched_scene(active, fixed):
         old = None
     new = active[new_inds]
     return new, old, new_inds
-
-
-def optimize_linear(patcher, active, bounds, fixed=None,
-                    factor=3.0,
-                    shape_cols=[], return_all=True, rank=1):
-    """Find the ML flux values for any sources with no HMC sampling yet. Update
-    the starting flux and the bounds to be appropriate for these ML fluxes. Note
-    this changes the bounds, and so makes any previous covariance matrix
-    estimates in the unconstrained space invalid.  It should therefore only be
-    used *before* any sampling for a particular source, or the covariance matrix
-    should be reset to the identity.
-    """
-
-    logger = logging.getLogger(f'dispatcher-child-{rank}')
-
-    new, old, new_inds = untouched_scene(active, fixed)
-    if len(new) == 0:
-        return active, bounds
-    out = optimize_fluxes(patcher, new, old, shape_cols=shape_cols,
-                          return_all=return_all)
-    fluxes = out[0]
-
-    # now update the initial fluxes for the active sources,
-    # and update the bounds
-    new_bounds = bounds.copy()
-    for i, b in enumerate(patcher.bandlist):
-        f = np.atleast_1d(fluxes[i])
-        if np.any(~np.isfinite(f)):
-            logger.info(f"Invalid flux in band {b} with fluxes {f}")
-            logger.info(f"Current active IDs {new[new_inds]['id']}")
-            raise ValueError
-            #continue
-
-        lo, hi = flux_bounds(f, factor)
-        if np.any(~np.isfinite(lo)) or np.any(~np.isfinite(lo)):
-            logger.info(f"could not create valid bounds for band {b} with fluxes {f}")
-            continue
-
-        if np.any(lo >= f):
-            logger.info(f"low bound > flux for band {b} with\nfluxes: {f}\nlower: {lo}")
-            continue
-
-        if np.any(hi <= f):
-            logger.info(f"upper bound <= flux for band {b} with\nfluxes: {f}\nupper: {hi}")
-            continue
-
-        active[b][new_inds] = f
-        new_bounds[b][new_inds, 0] = lo
-        new_bounds[b][new_inds, 1] = hi
-
-    return active, new_bounds
-
-
-def dump_design_matrices(fn, patcher, active, fixed, shape_cols=None):
-    new, old, _ = untouched_scene(active, fixed)
-    Xes, fixedX = design_matrix(patcher, new, fixed=old, shape_cols=shape_cols)
-    ws = patcher.split_band("ierr")
-    ys = patcher.split_band("data")
-    xpix = patcher.split_band("xpix")
-    ypix = patcher.split_band("ypix")
-
-    pixel_lists = dict(X=Xes, fixedX=fixedX, w=ws, y=ys,
-                       xpix=xpix, ypix=ypix)
-
-    with h5py.File(fn, "a") as h5:
-        h5.create_dataset("active", data=active)
-        h5.create_dataset("fixed", data=fixed)
-        for i, b in enumerate(patcher.bandlist):
-            g = h5.create_group(b)
-            for k, v in pixel_lists.items():
-                if v is not None:
-                    g.create_dataset(k, data=v[i])
 
 
 def max_roi(raw, bands, threshold=0.1, pixel_scale=0.06, flux_radius=None):
