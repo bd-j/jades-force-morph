@@ -80,7 +80,7 @@ def accomplish_task(patcher, task, config=None, logger=None,
                            step=step, stats=stats, patchID=taskID)
 
     # --- add extra linear optimization? ---
-    if config.linear_optimize:
+    if getattr(config, "linear_optimize", False):
         logger.info(f"Doing linear optimization of fluxes")
         final, bounds, out = lsq_optimize(patcher, start=final, out=out,
                                           logger=logger, config=config, taskID=taskID)

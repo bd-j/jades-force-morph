@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --mail-user=benjamin.johnson@cfa.harvard.edu  # Where to send mail
-#SBATCH --mail-type=END,FAIL           # Mail events (NONE, BEGIN, END, FAIL, ALL)
-#SBATCH --job-name=jmorph_sample        # Job name
+#SBATCH --mail-user=your_email@domain  # Where to send mail
+#SBATCH --mail-type=None               # Mail events (NONE, BEGIN, END, FAIL, ALL)
+#SBATCH --job-name=jmorph_sample       # Job name
 #SBATCH --partition=comp-astro         # queue for job submission
 #SBATCH --account=comp-astro           # queue for job submission
 #SBATCH --ntasks=1                     # Number of MPI ranks
@@ -24,17 +24,17 @@ module load openmpi mpi4py
 
 export PROJECT_DIR=$HOME/jades-force-morph
 config=$PROJECT_DIR/pho/morph_config.yml
-raw=$PROJECT_DIR/data/catalogs/initial.fits
+raw=$PROJECT_DIR/data/catalogs/postop_catalog.fits
 outbase=$PROJECT_DIR/output/sampling_v1
 
 echo "Running multi patch sampling for $config"
 cd $PROJECT_DIR/pho
 python sample.py --config_file $config \
-                 #--tweak_background tweakbg \
                  --raw_catalog  $raw \
                  --add_barriers 0 \
                  --full_cov 0 \
                  --discard_tuning 0 \
                  --outbase $outbase
+                 #--tweak_background tweakbg \
 
 date
