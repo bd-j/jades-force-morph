@@ -20,10 +20,13 @@ module load astropy
 module load littlemcmc
 module load openmpi mpi4py
 
+
 export PROJECT_DIR=$HOME/jades-force-morph
-config=$PROJECT_DIR/pho/morph_config.yml
+config=$PROJECT_DIR/pho/morph_mosaic_config.yml
 catalog=$PROJECT_DIR/data/catalogs/initial_catalog.fits
-outbase=$PROJECT_DIR/output/optimization_v1
+vers=v1
+outbase=$PROJECT_DIR/output/optimization_${vers}
+outcat=$PROJECT_DIR/data/catalogs/postop_${vers}_catalog.fits
 
 echo "Running optimization test for $config"
 cd $PROJECT_DIR/pho
@@ -35,5 +38,7 @@ python optimize.py --config_file $config \
                    --add_barriers 1 --use_gradients 1 --gtol 1e-4 --linear_optimize 1 \
                    --outbase $outbase
                    #--tweak_background tweakbg \
+
+python postprocess.py --root $outbase --mode postop --catname $outcat
 
 date

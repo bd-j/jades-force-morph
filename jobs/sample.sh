@@ -23,7 +23,7 @@ module load littlemcmc
 module load openmpi mpi4py
 
 export PROJECT_DIR=$HOME/jades-force-morph
-config=$PROJECT_DIR/pho/morph_config.yml
+config=$PROJECT_DIR/pho/morph_mosaic_config.yml
 raw=$PROJECT_DIR/data/catalogs/postop_catalog.fits
 outbase=$PROJECT_DIR/output/sampling_v1
 
