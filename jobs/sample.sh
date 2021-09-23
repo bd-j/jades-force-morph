@@ -24,17 +24,21 @@ module load openmpi mpi4py
 
 export PROJECT_DIR=$HOME/jades-force-morph
 config=$PROJECT_DIR/pho/morph_mosaic_config.yml
-raw=$PROJECT_DIR/data/catalogs/postop_catalog.fits
-outbase=$PROJECT_DIR/output/sampling_v1
+incat=$PROJECT_DIR/data/catalogs/postop_catalog.fits
+vers=v1
+outbase=$PROJECT_DIR/output/sampling_$vers
+outcat=$outbase/full_chaincat.fits
 
 echo "Running multi patch sampling for $config"
 cd $PROJECT_DIR/pho
 python sample.py --config_file $config \
-                 --raw_catalog  $raw \
+                 --raw_catalog  $incat \
                  --add_barriers 0 \
                  --full_cov 0 \
                  --discard_tuning 0 \
                  --outbase $outbase
                  #--tweak_background tweakbg \
+
+python postprocess.py --root $outbase --mode catalog --catname $outcat
 
 date
