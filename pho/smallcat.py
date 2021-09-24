@@ -10,8 +10,8 @@ from astropy.coordinates import SkyCoord
 from astropy import units as u
 
 from forcepho.patches.storage import MetaStore
-from forcepho.utils import read_config, sourcecat_dtype
-from forcepho.superscene import LinkedSuperScene, isophotal_radius
+from forcepho.utils import read_config, isophotal_radius
+from forcepho.superscene import LinkedSuperScene, sourcecat_dtype
 
 try:
     from starmask import mask_psf, mask_radius, get_cat_star

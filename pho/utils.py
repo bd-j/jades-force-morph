@@ -9,10 +9,10 @@ import numpy as np
 import h5py
 
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 
-from forcepho.superscene import LinkedSuperScene
-from forcepho.superscene import isophotal_radius
-from forcepho.utils import rectify_catalog
+from forcepho.superscene import LinkedSuperScene, rectify_catalog
+from forcepho.utils import isophotal_radius
 from forcepho.patches import JadesPatch
 
 
@@ -30,6 +30,11 @@ def get_superscene(config, logger, **rectify_kwargs):
     logger.info(f"reading catalog from {config.raw_catalog}")
     cat, bands, chdr = rectify_catalog(config.raw_catalog, **rectify_kwargs)
     bands = [b for b in bands if b in config.bandlist]
+    try:
+        unc = fits.getdata(config.raw_catalog, 2)
+        config.bounds_kwargs.update(unccat=unc)
+    except(IndexError):
+        pass
     try:
         roi = cat["roi"]
     except(IndexError):
