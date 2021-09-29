@@ -39,6 +39,8 @@ python optimize.py --config_file $config \
                    --outbase $outbase
                    #--tweak_background tweakbg \
 
+echo "Post-processing output at $outbase"
 python postprocess.py --root $outbase --mode postop --catname $outcat
+python postprocess.py --root $outbase --mode images
 
 date
