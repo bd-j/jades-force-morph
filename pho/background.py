@@ -35,7 +35,7 @@ nJy/pix) for each image
         out.write("band  bg(e/s/pix) bg(nJy/pix)  unc_bg  sigma_bg\n")
         ofmt = "{}  {:.3e} {:.3e} {:.3e} {:.3e}\n"
 
-    result = []
+    result, valid = [], []
     for n in imnames:
         h = fits.getheader(n)
         b = h["FILTER"]
@@ -43,10 +43,11 @@ nJy/pix) for each image
             zp = h["ABMAG"]
         except(KeyError):
             zp = ZP.get(b.upper(), None)
-        if zp:
+
+        if zp is not None:
             conv = 1e9 * 10**(0.4 * (8.9 - zp))
         else:
-            conv = 1.0
+            conv = np.nan
         im = fits.getdata(n).flatten()
         g = np.isfinite(im)
 
@@ -65,17 +66,22 @@ nJy/pix) for each image
         err = np.sqrt(y)
         amp = y.max()
 
-        p_opt, p_cov = curve_fit(gauss, xx, y, sigma=err)
+        try:
+            p_opt, p_cov = curve_fit(gauss, xx, y, sigma=err)
+        except(RuntimeError):
+            p_opt, p_cov = np.ones(4) * np.nan, np.eye(2) * np.nan
+            continue
         print(b, g.sum())
         print(mu, sig)
         print(p_opt[1], np.sqrt(p_cov[1, 1]), p_opt[2])
         values = b, p_opt[1]/conv, p_opt[1], np.sqrt(p_cov[1, 1]), p_opt[2]
         result.append(values)
+        valid.append(n)
         if tweakfile:
-            out.write(ofmt.format(values))
+            out.write(ofmt.format(*values))
     if tweakfile:
         out.close()
-    return result
+    return result, valid
 
 
 
@@ -88,13 +94,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", type=str, default="constant")
     parser.add_argument("--root", type=str, default="../output/runname")
-    parser.add_argument("--root", type=str, default="*01-01*f1??w*_delta.fits")
+    parser.add_argument("--search_pattern", type=str, default="*0?-0?_*F*_delta.fits")
     parser.add_argument("--tweakfile", type=str, default="bg_tweaks.dat")
     parser.add_argument("--niter", type=int, default=4)
     args = parser.parse_args()
 
     # fit constant background to residual images
     if args.mode == "constant":
-        imfmt = f"{args.root}/image/{args.search_patten}"
+        imfmt = f"{args.root}/image/{args.search_pattern}"
         imnames = glob.glob(imfmt)
-        result = fit_constant_bg(imnames, niter=args.niter, tweakfile=args.tweakfile)
+        result, valid = fit_constant_bg(imnames, niter=args.niter,
+                                        tweakfile=args.tweakfile)
