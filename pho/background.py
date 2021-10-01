@@ -50,6 +50,8 @@ nJy/pix) for each image
             conv = np.nan
         im = fits.getdata(n).flatten()
         g = np.isfinite(im)
+        # HACK: what are these - zero to single precision?
+        g = g & (np.abs(im) > 1e-6)
 
         for k in range(niter):
             mu = np.median(im[g])
@@ -69,7 +71,10 @@ nJy/pix) for each image
         try:
             p_opt, p_cov = curve_fit(gauss, xx, y, sigma=err)
         except(RuntimeError):
-            p_opt, p_cov = np.ones(4) * np.nan, np.eye(2) * np.nan
+            #p_opt, p_cov = np.ones(4) * np.nan, np.eye(2) * np.nan
+            continue
+        if np.abs(p_opt[1] - mu) > (30 * sig):
+            #throw out crazy fits
             continue
         print(b, g.sum())
         print(mu, sig)
@@ -82,8 +87,6 @@ nJy/pix) for each image
     if tweakfile:
         out.close()
     return result, valid
-
-
 
 
 if __name__ == "__main__":
@@ -105,3 +108,12 @@ if __name__ == "__main__":
         imnames = glob.glob(imfmt)
         result, valid = fit_constant_bg(imnames, niter=args.niter,
                                         tweakfile=args.tweakfile)
+
+    bb = np.array([(float(r[0][1:-1]), r[2], r[3]) for r in result])
+
+    import matplotlib.pyplot as pl
+    fig, ax = pl.subplots()
+    ax.errorbar(bb[:, 0]/100 + np.random.uniform(-0.05,0.05, len(bb)), bb[:,1], bb[:,2], linestyle="", marker=".")
+    ax.set_ylim(-1e-2, 0.5e-1)
+    ax.set_xlabel("Filter wavelength (micron)")
+    ax.set_ylabel("Residual background (nJy/pix)")

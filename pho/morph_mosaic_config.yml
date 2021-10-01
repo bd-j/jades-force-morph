@@ -26,9 +26,20 @@ bandlist:
 
 # ----------------------------
 # --- exposure backgrounds ---
+# name of dictionary and keyword to add to header
+tweak_background:
+  tweakbg
 # in nJy/pix, to be subtracted from individual exposures
-#tweakbg:
-#  F090W: -0.0511.....
+tweakbg:
+   F090W: 0.0125
+   F115W: 0.0125
+   F150W: 0.0125
+   F200W: 0.0125
+   F277W: 0.0125
+   F335M: 0.0175
+   F356W: 0.0125
+   F410M: 0.0175
+   F444W: 0.0125
 
 # ---------------------
 # --- preprocessing ---
