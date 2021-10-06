@@ -63,7 +63,7 @@ def get_patcher(config, logger):
                          return_residual=True)
     if getattr(config, "tweak_background", False):
         logger.info("Tweaking image backgrounds")
-        patcher = set_band_backgrounds(patcher, config)
+        patcher = set_band_backgrounds(patcher, config, logger=logger)
 
     return patcher
 
@@ -96,19 +96,21 @@ def dilate_sersic(in_file, out_file, dilation=10.0):
         fdest["rh"][...] = fdest["rh"][:] * dilation
 
 
-def set_band_backgrounds(patcher, config):
+def set_band_backgrounds(patcher, config, logger=None):
     """Add keywords to the header data that specify the residual background to
     be subtracting when buiolding a patch.
     """
     tweak_field = getattr(config, "tweak_background")
     if tweak_field == "":
-        print("No background tweak field name supplied")
+        logger.info("No background tweak field name supplied")
         return patcher
 
     bgs = getattr(config, tweak_field)
     for band in patcher.metastore.headers.keys():
         if band not in bgs:
+            logger.info(f"No tweak for band {band}.")
             continue
+        logger.info(f"Adding {tweak_field}={bgs[band]} to all {band} image headers.")
         for expID in patcher.metastore.headers[band].keys():
             patcher.metastore.headers[band][expID][tweak_field] = bgs[band]
 

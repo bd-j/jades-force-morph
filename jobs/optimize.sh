@@ -13,6 +13,7 @@ pwd; hostname; date
 export LC_ALL=en_US.UTF-8
 export LC_TYPE=en_US.UTF-8
 
+module purge
 module load cuda10.1 python/3.6.7 hdf5
 module load numpy scipy h5py
 module load numba pycuda
@@ -37,7 +38,7 @@ python optimize.py --config_file $config \
                    --strict 1 --maxactive_per_patch 12 \
                    --add_barriers 1 --use_gradients 1 --gtol 1e-4 --linear_optimize 1 \
                    --outbase $outbase
-                   #--tweak_background tweakbg \
+                   --tweak_background tweakbg \
 
 echo "Post-processing output at $outbase"
 python postprocess.py --root $outbase --mode postop --catname $outcat
