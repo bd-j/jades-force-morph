@@ -59,7 +59,7 @@ if __name__ == "__main__":
     parser.add_argument("--maxactive_per_patch", type=int, default=None)
     parser.add_argument("--max_fixed", type=int, default=60)
     parser.add_argument("--strict", type=int, default=0)
-    parser.add_argument("--tweak_background", type=str, default="")
+    parser.add_argument("--tweak_background", type=str, default=None)
     # bounds
     parser.add_argument("--minflux", type=float, default=None)
     parser.add_argument("--maxfluxfactor", type=float, default=0)

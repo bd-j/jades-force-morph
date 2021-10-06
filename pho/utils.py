@@ -61,7 +61,7 @@ def get_patcher(config, logger):
                          pixelstore=config.pixelstorefile,
                          splinedata=config.splinedatafile,
                          return_residual=True)
-    if config.tweak_background:
+    if getattr(config, "tweak_background", False):
         logger.info("Tweaking image backgrounds")
         patcher = set_band_backgrounds(patcher, config)
 
