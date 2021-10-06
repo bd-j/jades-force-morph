@@ -47,7 +47,7 @@ if __name__ == "__main__":
     parser.add_argument("--mode", type=str, default="images",
                         choices=modes)
     parser.add_argument("--root", type=str, default="../output/opt_all_v0.5_linopt_debug_v4")
-    parser.add_argument("--metafile", type=str, default="../data/stores/meta_hlf2_udf.json")
+    parser.add_argument("--metafile", type=str, default="")
     parser.add_argument("--exp", type=int, default=14)
     parser.add_argument("--catname", type=str, default=None)
     args = parser.parse_args()
@@ -56,6 +56,10 @@ if __name__ == "__main__":
     #write_patchreg(args.root, plist="patches.reg")
 
     if args.mode == 'images':
+        if not args.metafile:
+            config, _, _, _ = fpost.run_metadata(args.root)
+            args.metafile = config["metastorefile"]
+
         fpost.write_images(args.root, metafile=args.metafile, show_model=True)
         fpost.write_patchreg(args.root)
         fpost.write_sourcereg(args.root, showid=True)
