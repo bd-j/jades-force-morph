@@ -33,6 +33,7 @@ def get_superscene(config, logger, **rectify_kwargs):
     try:
         unc = fits.getdata(config.raw_catalog, 2)
         config.bounds_kwargs.update(unccat=unc)
+        logger.info(f"Flux priors based on optimization uncertainties.")
     except(IndexError):
         pass
     try:

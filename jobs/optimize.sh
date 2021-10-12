@@ -37,7 +37,7 @@ python optimize.py --config_file $config \
                    --minflux 0 --maxfluxfactor 3 \
                    --strict 1 --maxactive_per_patch 12 \
                    --add_barriers 1 --use_gradients 1 --gtol 1e-4 --linear_optimize 1 \
-                   --outbase $outbase
+                   --outbase $outbase \
                    --tweak_background tweakbg \
 
 echo "Post-processing output at $outbase"

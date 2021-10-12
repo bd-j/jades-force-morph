@@ -37,7 +37,7 @@ python sample.py --config_file $config \
                  --add_barriers 0 \
                  --full_cov 0 \
                  --discard_tuning 0 \
-                 --outbase $outbase
+                 --outbase $outbase \
                  --tweak_background tweakbg \
 
 echo "Post-processing output at $outbase"

@@ -56,6 +56,10 @@ def accomplish_task(patcher, task, config=None, logger=None,
     # --- get pixel data and metadata ---
     patcher._dirty_data = False
     patcher.build_patch(region, None, allbands=bands, tweak_background=config.tweak_background)
+    if patcher.background_offsets is not None:
+        logger.info(f"background offsets applied: {patcher.background_offsets}")
+    else:
+        logger.info(f"No background offsets applied.")
     logger.info(f"Prepared patch with {patcher.npix} pixels.")
     if config.sampling_draws == 0:
         return patcher

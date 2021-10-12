@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
         fpost.write_images(args.root, metafile=args.metafile, show_model=True)
         fpost.write_patchreg(args.root)
-        fpost.write_sourcereg(args.root, showid=True)
+        fpost.write_sourcereg(args.root, showid=True, isophote=("F200W", 0.1/0.06**2))
 
     elif args.mode == 'patches':
         fpost.residual_pdf(root=args.root, e=args.exp)
