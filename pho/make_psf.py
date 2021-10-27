@@ -147,7 +147,7 @@ def convert_psf_data(best, cx, cy, nloc=1, nradii=9, scale_factor=1.):
     pars["Cxy"] = cxy
     pars["sersic_bin"] = np.arange(nradii)[None, :, None]
 
-    return pars, scale
+    return pars, np.float(scale)
 
 
 def revert_psf_data(pars, cx=0, cy=0, scale_factor=1):
