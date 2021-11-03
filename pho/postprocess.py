@@ -45,6 +45,7 @@ def errorbars(samplecat, percentiles=[16, 50, 84]):
 
     Example shows how to plot assymetric 1-sigma-ish errorbars:
 
+    >>> scat = "path/to/postsample/catalog.fits"
     >>> ecat, hdr = errorbars(scat, percentiles=[16, 50, 84])
     >>> ecols = hdr["SMPLCOLS"].split(",")
     >>> colname = "rhalf"
