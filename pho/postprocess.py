@@ -40,13 +40,13 @@ def check_multipatch(root, n_sample=256):
     return stats
 
 
-def errorbars(samplecat, percentiles=[16, 50, 84]):
+def make_errorbars(samplecat, percentiles=[16, 50, 84]):
     """Make percentile based assymetric errorbars.
 
-    Example shows how to plot assymetric 1-sigma-ish errorbars:
+    Example shows how to plot asymmetric 1-sigma-ish errorbars:
 
     >>> scat = "path/to/postsample/catalog.fits"
-    >>> ecat, hdr = errorbars(scat, percentiles=[16, 50, 84])
+    >>> ecat, hdr = make_errorbars(scat, percentiles=[16, 50, 84])
     >>> ecols = hdr["SMPLCOLS"].split(",")
     >>> colname = "rhalf"
     >>> y = ecat[colname][:,1]
