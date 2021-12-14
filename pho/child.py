@@ -107,7 +107,7 @@ def optimization(model, start, cov=None, config=None, logger=None, disp=False, *
 
     # --- Run fit/optimization ---
     model.sampling = False
-    opt, scires = run_opt(model, start.copy(), jac=config.use_gradients,
+    opt, scires = run_opt(model, start.copy(), jac=bool(config.use_gradients),
                           disp=disp, gtol=config.gtol)
 
     # --- clean up ---

@@ -26,6 +26,7 @@ module load cuda10.1 python/3.6.7 numpy hdf5 git slurm
 python setup.py install --user
 
 pip install pyyaml --user
+pip install regions --user
 
 cd $HOME
 git clone https://github.com/bd-j/jades-force-morph

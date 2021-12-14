@@ -27,17 +27,23 @@ __all__ = ["get_superscene", "get_patcher", "get_bigscene"
 def get_superscene(config, logger, **rectify_kwargs):
 
     # --- Patch Dispatcher ---  (parent)
-    logger.info(f"reading catalog from {config.raw_catalog}")
+    if type(config.raw_catalog) is str:
+        logger.info(f"reading catalog from {config.raw_catalog}")
+        try:
+            unc = fits.getdata(config.raw_catalog, 2)
+            config.bounds_kwargs.update(unccat=unc)
+            logger.info(f"Flux priors based on spplied uncertainty estimates.")
+        except(IndexError):
+            pass
+
     cat, bands, chdr = rectify_catalog(config.raw_catalog, **rectify_kwargs)
     bands = [b for b in bands if b in config.bandlist]
-    try:
-        unc = fits.getdata(config.raw_catalog, 2)
-        config.bounds_kwargs.update(unccat=unc)
-        logger.info(f"Flux priors based on optimization uncertainties.")
-    except(IndexError):
-        pass
+
     try:
         roi = cat["roi"]
+        if roi.max() <= 0:
+            roi = 2 * cat["rhalf"]
+            logger.info("using twice rhalf for ROI")
     except(IndexError):
         logger.info("using twice rhalf for ROI")
         roi = 2 * cat["rhalf"]
@@ -45,6 +51,7 @@ def get_superscene(config, logger, **rectify_kwargs):
     sceneDB = LinkedSuperScene(sourcecat=cat, bands=bands,
                                maxactive_per_patch=config.maxactive_per_patch,
                                maxradius=config.patch_maxradius,
+                               minradius=getattr(config, "patch_minradius", 1.0),
                                target_niter=config.sampling_draws,
                                statefile=os.path.join(config.outbase, config.scene_catalog),
                                bounds_kwargs=config.bounds_kwargs,

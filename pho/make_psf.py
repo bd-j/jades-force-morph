@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from copy import deepcopy
 import os, glob, sys
 import argparse
 
@@ -94,7 +95,7 @@ def fit_image(image, args, a=None, oversample=1, **kwargs):
     return best, samples, mcmc, unc
 
 
-def convert_psf_data(best, cx, cy, nloc=1, nradii=9, scale_factor=1.):
+def convert_psf_data(best, cx, cy, nloc=1, nradii=9, oversample=2):
     """
     Parameters
     ----------
@@ -108,10 +109,9 @@ def convert_psf_data(best, cx, cy, nloc=1, nradii=9, scale_factor=1.):
     cy : float
         Center of PSF, in PSF image pixels
 
-    scale_factor : float
-        Ratio of the plate scale in the PSF image (e.g. in mas) to the plate
-        scale of the science image.  So if the PSF image if oversampled by a
-        factor of 2, then this number is 0.5
+    oversample : int
+        Number of pixels in the PSF image per pixel of the science image. So if
+        the PSF image if oversampled by a factor of 2, then this number is 2.
 
     nloc : int
         Make `nloc` copies of the PSF parameter arrays - this will be the first
@@ -125,8 +125,11 @@ def convert_psf_data(best, cx, cy, nloc=1, nradii=9, scale_factor=1.):
     Returns
     -------
     pars : structured ndarray of shape (nloc, nradii, ngauss)
+        All units are in science image pixels!
     """
     ngauss = len(best["x"])
+
+    scale_factor = 1. / oversample
 
     # This order is important
     cols = ["amp", "xcr", "ycr", "Cxx", "Cyy", "Cxy"]
@@ -165,11 +168,11 @@ def revert_psf_data(pars, cx=0, cy=0, scale_factor=1):
     return best
 
 
-def package_output(h5file, band, pars, scale, image, model=None):
+def package_output(h5file, band, pars, scale, image, model=None, oversample=1):
     """
     """
     with h5py.File(h5file, "a") as h5:
-        bg = h5.create_group(band)
+        bg = h5.create_group(band.upper())
         bg.create_dataset("parameters", data=pars.reshape(pars.shape[0], -1))
         im = image.data.reshape(image.nx, image.ny)
         bg.create_dataset("truth", data=image.data)
@@ -180,6 +183,7 @@ def package_output(h5file, band, pars, scale, image, model=None):
         bg.attrs["ny"] = image.ny
         bg.attrs["cx"] = image.cx
         bg.attrs["cy"] = image.cy
+        bg.attrs["DET_SAMP"] = oversample
         bg.attrs["flux_scale"] = scale
         if model is not None:
             m = model.reshape(image.nx, image.ny)
@@ -252,26 +256,37 @@ if __name__ == "__main__":
         print(pad)
         image, hdr = read_image(filename, pad=pad, ext=ext)
         oversample = hdr["DET_SAMP"]
+        arsec_per_psf_pixel = 0.03 * (1 + (b in lw_bands)) / oversample
         best, samples, mcmc, unc = fit_image(image, args, a=1.0,
                                              oversample=oversample, dcen=oversample / 2,
-                                             max_tree_depth=11, ngauss_neg=args.ngauss_neg)
+                                             max_tree_depth=10, ngauss_neg=args.ngauss_neg)
+        best_p = deepcopy(best)
         best_m = {}
-        for p in ["a", "sx", "sy", "rho", "x", "y", "weight"]:
+        gpnames = ["a", "sx", "sy", "rho", "x", "y", "weight"]
+        for p in gpnames:
             try:
                 best_m[p] = best.pop(f"{p}_m")
             except(KeyError):
                 pass
 
         model = psf_prediction(image.xpix, image.ypix, **best)
+        # get negative gaussian
         if len(best_m):
             model_m = psf_prediction(image.xpix, image.ypix, **best_m)
             model -= model_m
+            for p in gpnames[1:]:
+                v = best_m[p]
+                if p == "weight":
+                    v *= -1
+                    best[p] *= best["a"]
+                    best["a"] = 1.0
+                best[p] = np.concatenate([best[p], v])
         chi = (model - image.data) / image.data.max()
 
         if args.output:
-            pars, scale = convert_psf_data(best, image.cx, image.cy, scale_factor=1/oversample)
+            pars, scale = convert_psf_data(best, image.cx, image.cy, oversample=oversample)
             outname = f"{args.output}_ng{args.ngauss}m{args.ngauss_neg}.h5"
-            package_output(outname, b, pars, scale, image, model=model)
+            package_output(outname, b, pars, scale, image, model=model, oversample=oversample)
             ff = fitsify_output(outname.replace(".h5", f"_{b}.fits"), pars[0, 0], image, model=model,
                                 oversample=oversample, flxscl=scale, psfim=os.path.basename(filename))
 
