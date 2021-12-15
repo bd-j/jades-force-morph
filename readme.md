@@ -7,9 +7,6 @@ Applying forcepho to JADES simulated images to test morphology estimates.
 Install on lux
 --------------------
 
-```sh
-export PROJECT_DIR=$HOME/jades-force-morph
-```
 
 Install:
 
@@ -34,9 +31,19 @@ module load cuda10.2 hdf5/1.10.6 gcc git slurm
 conda activate force
 python -m pip install .
 
-
 cd $HOME
 git clone https://github.com/bd-j/jades-force-morph
+```
+
+Slurm preamble
+--------------
+
+```sh
+module purge
+module load cuda10.2 hdf5/1.10.6 git slurm
+source activate force
+
+export PROJECT_DIR=$HOME/jades-force-morph
 ```
 
 

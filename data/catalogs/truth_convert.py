@@ -40,7 +40,8 @@ def to_forcepho_format():
 
     # convert to nJy
     for b in bands:
-        cat[b] = 10**(-0.4 * tcat[f"NIRCAM_{b}"]) * 3631e9
+        mag = np.clip(tcat[f"NIRCAM_{b}"], 0, 40)
+        cat[b] = 10**(-0.4 * mag) * 3631e9
 
     hdulist = fits.HDUList([fits.PrimaryHDU(), fits.BinTableHDU(cat)])
     for h in hdulist:

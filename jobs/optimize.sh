@@ -14,8 +14,8 @@ export LC_ALL=en_US.UTF-8
 export LC_TYPE=en_US.UTF-8
 
 module purge
-module load cuda10.2 hdf5/1.10.6 gcc openmpi
-conda activate force
+module load cuda10.2 hdf5/1.10.6 openmpi
+source activate force
 
 export PROJECT_DIR=$HOME/jades-force-morph
 config=$PROJECT_DIR/pho/morph_mosaic_config.yml

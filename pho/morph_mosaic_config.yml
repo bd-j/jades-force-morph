@@ -119,7 +119,9 @@ max_active_fraction:
 maxactive_per_patch:
   15
 patch_maxradius:  # in arcsec
-  20
+  5
+patch_minradius:
+  2
 target_niter:
   256
 ntry_checkout:
