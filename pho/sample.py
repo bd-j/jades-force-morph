@@ -55,6 +55,7 @@ if __name__ == "__main__":
     # input
     parser.add_argument("--config_file", type=str, default="./hlf_config.yml")
     parser.add_argument("--raw_catalog", type=str, default=None)
+    parser.add_argument("--bandlist", type=str, narg="*", default=None)
     parser.add_argument("--seed_index", type=int, default=-1)
     parser.add_argument("--maxactive_per_patch", type=int, default=None)
     parser.add_argument("--max_fixed", type=int, default=60)
