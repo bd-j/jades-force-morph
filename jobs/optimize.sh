@@ -20,7 +20,7 @@ conda activate force
 export PROJECT_DIR=$HOME/jades-force-morph
 config=$PROJECT_DIR/pho/morph_mosaic_config.yml
 catalog=$PROJECT_DIR/data/catalogs/truth_initial_catalog.fits
-vers=v1
+vers=v2.0
 outbase=$PROJECT_DIR/output/optimization_${vers}
 outcat=$PROJECT_DIR/data/catalogs/postop_${vers}_catalog.fits
 

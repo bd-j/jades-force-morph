@@ -42,12 +42,14 @@ def to_forcepho_format():
     for b in bands:
         cat[b] = 10**(-0.4 * tcat[f"NIRCAM_{b}"]) * 3631e9
 
-    hdu = fits.BinTableHDU(cat)
-    hdu.header["FILTERS"] = ",".join(bands)
-    hdu.writeto("truth_initial_catalog.fits", overwrite=True)
+    hdulist = fits.HDUList([fits.PrimaryHDU(), fits.BinTableHDU(cat)])
+    for h in hdulist:
+        h.header["FILTERS"] = ",".join(bands)
+    hdulist.writeto("truth_initial_catalog.fits", overwrite=True)
 
 
 if __name__ == "__main__":
 
     to_forcepho_format()
     icat = fits.getdata("truth_initial_catalog.fits")
+    ihdr = fits.getheader("truth_initial_catalog.fits")
