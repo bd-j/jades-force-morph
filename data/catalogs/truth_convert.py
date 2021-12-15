@@ -31,12 +31,6 @@ def to_forcepho_format():
     cat["rhalf"] = tcat["semi_a"] * cat["q"]
     cat["roi"] = 5 * cat["rhalf"]
 
-    #    p = sourcecat["pa"] > 0
-    #    sourcecat["pa"] += np.pi / 2. - p * np.pi
-
-
-    # restrict to the range +- 90 degrees
-
     # add 90 degrees, reverse and to radians
     pa = np.deg2rad(-(tcat["pa"] + 90))
     # restrict to +/- pi/2

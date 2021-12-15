@@ -14,6 +14,13 @@ export PROJECT_DIR=$HOME/jades-force-morph
 Install:
 
 ```sh
+# Get miniconda
+
+cd $HOME
+curl -sL https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+
+# get forcepho
 cd $HOME
 module load git
 git clone https://github.com/bd-j/forcepho
@@ -22,11 +29,11 @@ git clone https://github.com/bd-j/forcepho
 cd $HOME/forcepho
 git pull
 module purge
-module load cuda10.1 python/3.6.7 numpy hdf5 git slurm
-python setup.py install --user
+module load cuda10.2 hdf5/1.10.6 gcc git slurm
+#conda env create -f environment.yml
+conda activate force
+python -m pip install .
 
-pip install pyyaml --user
-pip install regions --user
 
 cd $HOME
 git clone https://github.com/bd-j/jades-force-morph
