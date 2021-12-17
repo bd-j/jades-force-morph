@@ -22,7 +22,7 @@ cd $HOME
 module load git
 git clone https://github.com/bd-j/forcepho
 
-# can re-run this block to update forcepho
+# create environment and install forcepho
 cd $HOME/forcepho
 module purge
 module load cuda10.2 hdf5/1.10.6 gcc git slurm

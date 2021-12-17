@@ -16,13 +16,15 @@ export LC_ALL=en_US.UTF-8
 export LC_TYPE=en_US.UTF-8
 
 module purge
-module load cuda10.2 hdf5/1.10.6 gcc openmpi
-conda activate force
+module load cuda10.2 hdf5/1.10.6
+source activate force
+
 
 export PROJECT_DIR=$HOME/jades-force-morph
+
+vers=v2.1
 config=$PROJECT_DIR/pho/morph_mosaic_config.yml
-incat=$PROJECT_DIR/data/catalogs/postop_catalog.fits
-vers=v1
+incat=$PROJECT_DIR/data/catalogs/postop_v2.1_catalog.fits
 outbase=$PROJECT_DIR/output/sampling_$vers
 outcat=$outbase/full_chaincat.fits
 
