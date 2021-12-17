@@ -24,11 +24,10 @@ git clone https://github.com/bd-j/forcepho
 
 # can re-run this block to update forcepho
 cd $HOME/forcepho
-git pull
 module purge
 module load cuda10.2 hdf5/1.10.6 gcc git slurm
-#conda env create -f environment.yml
-conda activate force
+conda env create -f environment.yml
+source activate force
 python -m pip install .
 
 cd $HOME
@@ -44,6 +43,11 @@ module load cuda10.2 hdf5/1.10.6 git slurm
 source activate force
 
 export PROJECT_DIR=$HOME/jades-force-morph
+
+# to reinstall forcepho
+cd $HOME/forcepho
+git pull
+python -m pip install .
 ```
 
 
