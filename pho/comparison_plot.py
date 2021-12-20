@@ -5,12 +5,15 @@ import numpy as np
 import matplotlib.pyplot as pl
 
 from astropy.io import fits
+from forcepho.utils import frac_sersic
 
 units = dict(q="b/a",
              pa="radians N of E",
              rhalf="arcsec",
              sersic="",
-             flux="nJy")
+             flux="nJy",
+             dec="",
+             ra="")
 
 
 def compare(x, ys, field, ax, c=None, **scatter_kwargs):
@@ -66,6 +69,16 @@ def rectify(y, lnp=None):
     return ymed, delta, ymax
 
 
+def aperture_flux(scat, truths):
+    band = truths["band"]
+    rhalf = truths["rhalf"]
+    fr = frac_sersic(rhalf[:, None], sersic=scat["sersic"], rhalf=scat["rhalf"])
+    total_flux = np.array([scat[i][b] for i, b in enumerate(band)])
+    aperture_flux = total_flux * fr
+
+    return aperture_flux, total_flux
+
+
 if __name__ == "__main__":
 
     pl.ion()
@@ -86,7 +99,7 @@ if __name__ == "__main__":
            (valid[f"in_{module.lower()}"] > 0) & (snr > snr_thresh))
 
     # -- thing to compare to truth ---
-    #out = fits.getdata(f"{root}/outscene.fits")
+    #opt = fits.getdata(f"{root}/outscene.fits")
     result = "../output/sampling_v2.1.3/full_chaincat.fits"
     out = fits.getdata(result)
     #out = fits.getdata("../data/catalogs/postop_v2.1_catalog.fits")
@@ -102,7 +115,9 @@ if __name__ == "__main__":
                          c=np.log10(snr[sel]), marker="o", alpha=0.8)
 
     fig.colorbar(cb, label=fr"$\log(SNR_{{{bands[0]}}})$")
-    fig.suptitle(f"Single band optimization: {bands[0]}")
+    fig.suptitle(f"Single band: {bands[0]}")
     axes.flat[-1].set_visible(False)
     fig.tight_layout()
     fig.savefig(f"{result.replace('.fits', '')}_comparison.png", dpi=300)
+
+    
