@@ -3,101 +3,15 @@
 
 import glob
 import numpy as np
+import matplotlib.pyplot as pl
+from matplotlib.ticker import FormatStrFormatter
 
 from astropy.io import fits
 
 from forcepho.utils import read_config
 from forcepho.postprocess import Residuals, Samples
 from forcepho import postprocess as fpost
-
-
-def find_multipatch(root):
-    config, plog, slog, final = fpost.run_metadata(root)
-    samples = [Samples(f"{root}/patches/patch{p}_samples.h5") for p in plog]
-    chains, sources, patches = [], [], []
-    for sid, pids in slog.items():
-        if len(pids) == 1:
-            continue
-        c = []
-        for pid in pids:
-            ai = samples[int(pid)].active["source_index"].tolist().index(int(sid))
-            c.append(samples[int(pid)].chaincat[ai:ai+1])
-        chains.append(np.concatenate(c))
-        sources.append(sid)
-        patches.append(pids)
-
-    return sources, patches, chains
-
-
-def check_multipatch(root, n_sample=256):
-    sid, pids, chains = find_multipatch(root)
-    stats = {}
-    for s, p, c in zip(sid, pids, chains):
-        stats[s] = {}
-        for col in vcols:
-            sm = c[col][:, -n_sample:]
-            stats[s][col] = sm.mean(axis=-1), sm.std(axis=-1)
-    return stats
-
-
-def make_errorbars(samplecat, percentiles=[16, 50, 84]):
-    """Make percentile based assymetric errorbars.
-
-    Example shows how to plot asymmetric 1-sigma-ish errorbars:
-
-    >>> scat = "path/to/postsample/catalog.fits"
-    >>> ecat, hdr = make_errorbars(scat, percentiles=[16, 50, 84])
-    >>> ecols = hdr["SMPLCOLS"].split(",")
-    >>> colname = "rhalf"
-    >>> y = ecat[colname][:,1]
-    >>> e = np.diff(ecat[colname], axis=-1).T
-    >>> ax.errorbar(y, y, e, linestyle="", marker="o", ecolor="k")
-
-    Parameters
-    ----------
-    samplecat : string or structured ndarray
-        Name of fits file contining result of
-        :py:func:`forcepho.postprocess.postsample_catalog()`
-
-    percentiles : list of floats in the interval (0, 100)
-        The percentiles to compute
-
-    Returns
-    -------
-    errorcat : structured ndarray
-        Catalog of percentile values for each parameter.  These are given
-        in the same order as the list in the `percentiles` keyword.
-
-    hdr : dictionary or FITSHeader
-        information about the errorbars.
-    """
-    if type(samplecat) is str:
-        cat = np.array(fits.getdata(samplecat))
-        hdr = fits.getheader(samplecat)
-        hdr["PCTS"] = ",".join([str(p) for p in percentiles])
-        bands = hdr["FILTERS"].split(",")
-    else:
-        cat = samplecat
-        hdr = dict(PCTS=",".join([str(p) for p in percentiles]))
-
-    desc, scol = [], []
-    for d in cat.dtype.descr:
-        if len(d) == 3:
-            scol.append(d[0])
-            desc.append((d[0], d[1], len(percentiles)))
-        else:
-            desc.append(d)
-    ecat = np.zeros(len(cat), dtype=np.dtype(desc))
-    for col in ecat.dtype.names:
-        if col in scol:
-            pct = np.percentile(cat[col], q=percentiles, axis=-1)
-            ecat[col] = pct.T
-        else:
-            ecat[col] = cat[col]
-
-    hdr["SMPLCOLS"] = ",".join(scol)
-
-    return ecat, hdr
+from forcepho.utils import frac_sersic
 
 
 if __name__ == "__main__":

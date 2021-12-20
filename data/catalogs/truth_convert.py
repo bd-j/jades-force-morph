@@ -3,6 +3,7 @@
 
 import numpy as np
 from astropy.io import fits
+from astropy.wcs import WCS
 
 
 def initial_convert():
@@ -49,8 +50,28 @@ def to_forcepho_format():
     hdulist.writeto("truth_initial_catalog.fits", overwrite=True)
 
 
+def check_in_image(icat, image):
+    hdr = fits.getheader(image)
+    wcs = WCS(hdr)
+    x, y = wcs.all_world2pix(icat["ra"], icat["dec"], 0)
+    data = fits.getdata(image).T
+    inim = np.isfinite(data[x.astype(int), y.astype(int)])
+    return inim
+
+
 if __name__ == "__main__":
 
     to_forcepho_format()
     icat = fits.getdata("truth_initial_catalog.fits")
     ihdr = fits.getheader("truth_initial_catalog.fits")
+    assert "FILTERS" in ihdr
+
+    insw = check_in_image(icat, "../images/mosaics/F200W_final/F200W.fits")
+    inlw = check_in_image(icat, "../images/mosaics/F277W_final/F277W.fits")
+
+    dtype = np.dtype([("id", ">i8"), ("in_sw", ">i4"), ("in_lw", ">i4")])
+    vcat = np.zeros(len(icat), dtype=dtype)
+    vcat["id"] = icat["id"]
+    vcat["in_sw"] = insw
+    vcat["in_lw"] = inlw
+    fits.writeto("truth_in_image.fits", vcat, overwrite=True)
