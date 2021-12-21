@@ -135,6 +135,7 @@ if __name__ == "__main__":
                 result = do_child(patcher, chore, config)
             except(ValueError):
                 sceneDB.checkin_region(active, fixed, config.sampling_draws)
+                continue
         else:
             break
 
