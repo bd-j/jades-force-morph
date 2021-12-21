@@ -53,12 +53,13 @@ if __name__ == "__main__":
     # --- Arguments ---
     parser = argparse.ArgumentParser()
     # input
-    parser.add_argument("--config_file", type=str, default="./hlf_config.yml")
+    parser.add_argument("--config_file", type=str, default="./morph_mosaic_config.yml")
     parser.add_argument("--raw_catalog", type=str, default=None)
     parser.add_argument("--bandlist", type=str, nargs="*", default=None)
     parser.add_argument("--seed_index", type=int, default=-1)
     parser.add_argument("--maxactive_per_patch", type=int, default=None)
     parser.add_argument("--max_fixed", type=int, default=60)
+    parser.add_argument("--patch_maxradius", type=float, default=None)
     parser.add_argument("--strict", type=int, default=0)
     parser.add_argument("--tweak_background", type=str, default=None)
     # bounds
@@ -130,7 +131,10 @@ if __name__ == "__main__":
 
         # submit the task and get the results
         if HASGPU:
-            result = do_child(patcher, chore, config)
+            try:
+                result = do_child(patcher, chore, config)
+            except(ValueError):
+                sceneDB.checkin_region(active, fixed, config.sampling_draws)
         else:
             break
 
