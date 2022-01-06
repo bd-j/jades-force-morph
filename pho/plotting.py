@@ -110,18 +110,28 @@ def plot_corner(patchname, sid=-1, truths=None, smooth=0.05, hkwargs=dict(alpha=
     # this doesn't do anything
     #[ax.set_xlabel(ax.get_xlabel(), labelpad=200) for ax in axes[-1,:]]
     #[ax.set_ylabel(ax.get_ylabel(), labelpad=30) for ax in axes[:, 0]]
+    #fig.tight_layout()
 
     return fig, axes
 
 
+def adjust_labels(axes, dy=-0.1):
+    for ax in axes[-1, :]:
+        x, y = ax.xaxis.label.get_position()
+        ax.xaxis.set_label_coords(x, y+dy)
+    for ax in axes[:, 0]:
+        x, y = ax.yaxis.label.get_position()
+        ax.yaxis.set_label_coords(x+dy, y)
+
+
 if __name__ == "__main__":
     args = argparse.Namespace()
-    args.root = "../output/sampling_v2.1.3"
+    args.root = "../output/sampling_v2.1.3_F356W"
     args.snr_thresh = 30
 
     config, plog, slog, final = fpost.run_metadata(args.root)
-    bands = ["F200W"]
-    module, pix_scale, sigma_pix = "sw", 0.03, 0.06
+    #bands, module, pix_scale, sigma_pix = ["F200W"], "sw", 0.03, 0.06
+    bands, module, pix_scale, sigma_pix = ["F356W"], "lw", 0.06, 0.1
 
     title_fmt = "JAGUAR_ID={id:.0f}\nnsersic={sersic:.1f}, rhalf={rhalf:.2f}, q={q:.2f}"
     truths = np.array(fits.getdata("../data/catalogs/truth_initial_catalog.fits"))
@@ -150,7 +160,9 @@ if __name__ == "__main__":
 
             cfig, caxes = plot_corner(patchname, sid=sid, truths=truth.copy())
             cfig.text(0.4, 0.8, title, transform=cfig.transFigure)
-            cfig.savefig(f"figures/corner/JAGUARID={jid}_corner.png", dpi=200)
+            adjust_labels(caxes, dy=-0.15)
+            cfig.text(0.6, 0.6, "Truth", color="red")
+            cfig.savefig(f"figures/{bands[0]}/corner/JAGUARID={jid}_corner.png", dpi=200)
             pl.close(cfig)
 
             rfig, raxes, val = plot_residual(patchname)
@@ -158,5 +170,5 @@ if __name__ == "__main__":
             vdict.update(val)
             vtitle = "Last iteration:" + title_fmt.format(**vdict) + f"\nx={val['x']:.1f}, y={val['y']:.1f}"
             rfig.suptitle(vtitle)
-            rfig.savefig(f"figures/residuals/JAGUARID={jid}_residual.png", dpi=200)
+            rfig.savefig(f"figures/{bands[0]}/residuals/JAGUARID={jid}_residual.png", dpi=200)
             pl.close(rfig)

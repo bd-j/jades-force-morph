@@ -83,8 +83,11 @@ if __name__ == "__main__":
 
     pl.ion()
 
-    root = "../output/optimization_v2.1"
-    bands, pix_scale, sigma_pix, module = ["F200W"], 0.03, 0.06, "sw"
+    #root = "../output/optimization_v2.1"
+    result = "../output/sampling_v2.1.3_F356W/full_chaincat.fits"
+
+    #bands, pix_scale, sigma_pix, module = ["F200W"], 0.03, 0.06, "sw"
+    bands, pix_scale, sigma_pix, module = ["F356W"], 0.06, 0.1, "lw"
     fields = bands + ["rhalf", "sersic", "q", "pa"]
     snr_thresh = 30
 
@@ -100,7 +103,6 @@ if __name__ == "__main__":
 
     # -- thing to compare to truth ---
     #opt = fits.getdata(f"{root}/outscene.fits")
-    result = "../output/sampling_v2.1.3/full_chaincat.fits"
     out = fits.getdata(result)
     #out = fits.getdata("../data/catalogs/postop_v2.1_catalog.fits")
     #unc = fits.getdata("../data/catalogs/postop_v2.1_catalog.fits", 1)
@@ -119,5 +121,3 @@ if __name__ == "__main__":
     axes.flat[-1].set_visible(False)
     fig.tight_layout()
     fig.savefig(f"{result.replace('.fits', '')}_comparison.png", dpi=300)
-
-    
