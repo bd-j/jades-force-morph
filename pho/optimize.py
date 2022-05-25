@@ -50,8 +50,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # input
     parser.add_argument("--config_file", type=str, default="./morph_mosaic_config.yml")
-    parser.add_argument("--raw_catalog", type=str, default=None)
     parser.add_argument("--bandlist", type=str, nargs="*", default=None)
+    parser.add_argument("--raw_catalog", type=str, default=None)
     parser.add_argument("--seed_index", type=int, default=-1)
     parser.add_argument("--maxactive_per_patch", type=int, default=None)
     parser.add_argument("--max_fixed", type=int, default=60)
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     # output
     parser.add_argument("--write_residuals", type=int, default=1)
     parser.add_argument("--outbase", type=str, default="../output/multipatchserial/")
-    # sampling
+    # optimization
     parser.add_argument("--use_gradients", type=int, default=1)
     parser.add_argument("--linear_optimize", type=int, default=1)
     parser.add_argument("--gtol", type=float, default=1e-5)
@@ -103,18 +103,9 @@ if __name__ == "__main__":
             region, active, fixed = sceneDB.checkout_region(seed_index=seed, max_fixed=config.max_fixed)
             seed = -1
             if active is not None:
-                if len(active) != len(np.unique(active["source_index"])):
-                    logger.error(f"Duplicate source in region!!!")
-                    logger.info(f"seed_index={active[0]['source_index']}, ID={active[0]['id']}")
-                    logger.info(f"indices: {active['source_index']}")
-                    logger.info(f"IDs: {active['id']}")
-                    sceneDB.checkin_region(active, fixed, 0)
-                    try:
-                        sceneDB.writeout(f"{config.outbase}/scene_with_dupes_task{taskID}.fits")
-                    except:
-                        pass
-                else:
-                    break
+                assert len(active) == len(np.unique(active["source_index"])), \
+                    f"Duplicate source in region!!!\n seed_index={active[0]['source_index']}"
+                break
         else:
             logger.error(f'Failed to checkout region')
             break

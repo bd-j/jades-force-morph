@@ -42,11 +42,11 @@ def get_superscene(config, logger, **rectify_kwargs):
     try:
         roi = cat["roi"]
         if roi.max() <= 0:
-            roi = 2 * cat["rhalf"]
-            logger.info("using twice rhalf for ROI")
+            roi = 5 * cat["rhalf"]
+            logger.info("using 5X rhalf for ROI")
     except(IndexError):
-        logger.info("using twice rhalf for ROI")
-        roi = 2 * cat["rhalf"]
+        logger.info("using  5X rhalf for ROI")
+        roi = 5 * cat["rhalf"]
 
     sceneDB = LinkedSuperScene(sourcecat=cat, bands=bands,
                                maxactive_per_patch=config.maxactive_per_patch,

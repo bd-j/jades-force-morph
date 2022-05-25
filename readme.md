@@ -14,13 +14,14 @@ Install:
 # Get miniconda
 
 cd $HOME
-curl -sL https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 bash Miniconda3-latest-Linux-x86_64.sh
 
 # get forcepho
 cd $HOME
 module load git
 git clone https://github.com/bd-j/forcepho
+git pull
 
 # create environment and install forcepho
 cd $HOME/forcepho

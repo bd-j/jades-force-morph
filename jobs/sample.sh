@@ -19,9 +19,7 @@ module purge
 module load cuda10.2 hdf5/1.10.6
 source activate force
 
-
 export PROJECT_DIR=$HOME/jades-force-morph
-
 vers=v2.1
 config=$PROJECT_DIR/pho/morph_mosaic_config.yml
 incat=$PROJECT_DIR/data/catalogs/postop_v2.1_catalog.fits

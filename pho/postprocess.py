@@ -34,7 +34,7 @@ if __name__ == "__main__":
     if args.mode == 'images':
         if not args.metafile:
             config, _, _, _ = fpost.run_metadata(args.root)
-            args.metafile = config["metastorefile"]
+            args.metafile = config.get("metastorefile", None)
 
         fpost.write_images(args.root, metafile=args.metafile, show_model=True)
         fpost.write_patchreg(args.root)
