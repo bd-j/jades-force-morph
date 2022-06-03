@@ -8,7 +8,7 @@
 #SBATCH --nodes=1                      # Number of nodes
 #SBATCH --ntasks-per-node=1            # How many tasks on each node
 #SBATCH --time=3:00:00                 # Time limit hrs:min:sec
-#SBATCH --output=jmorph_sample_%j.log  # Standard output and error log
+#SBATCH --output=logs/jmorph_slope_%j.log  # Standard output and error log
 
 pwd; hostname; date
 
