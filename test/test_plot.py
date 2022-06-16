@@ -18,7 +18,8 @@ fsize = 8, 9.5
 
 def plot_trace(patchname, title_fmt=".2g", fsize=fsize):
     samples = Samples(patchname)
-    fig, axes = pl.subplots(7, sharex=True, figsize=fsize)
+    npar = samples.chain.shape[-1]
+    fig, axes = pl.subplots(npar, sharex=True, figsize=fsize)
     samples.show_chain(0, axes=np.array(axes), truth=samples.active[0])
     for i, c in enumerate(samples.bands + samples.shape_cols):
         ax = axes[i]
@@ -49,7 +50,8 @@ def plot_corner(patchname, smooth=0.05, hkwargs=dict(alpha=0.65),
     truth = np.atleast_2d(samples.starting_position)
     labels = samples.chaincat.dtype.names[1:]
 
-    fig, axes = pl.subplots(7, 7, figsize=fsize)
+    npar = samples.chain.shape[-1]
+    fig, axes = pl.subplots(npar, npar, figsize=fsize)
     axes = allcorner(samples.chain.T, labels, axes,
                      color="royalblue",  # qcolor="black",
                      psamples=truth.T,
@@ -72,15 +74,21 @@ def plot_corner(patchname, smooth=0.05, hkwargs=dict(alpha=0.65),
 def plot_residual(patchname, vmin=-1, vmax=5, rfig=None, raxes=None):
     s = Samples(patchname)
     r = Residuals(patchname.replace("samples", "residuals"))
-    data, _, _ = r.make_exp(value="data")
-    delta, _, _ = r.make_exp(value="residual")
-    ierr, _, _ = r.make_exp(value="ierr")
+    nexp = len(r.exposures)
+
     if raxes is None:
-        rfig, raxes = pl.subplots(2, 3, gridspec_kw=dict(height_ratios=[1, 40]))
+        hr = [1] + nexp * [40]
+        rfig, raxes = pl.subplots(1+nexp, 3, gridspec_kw=dict(height_ratios=hr))
     kw = dict(origin="lower", vmin=vmin, vmax=vmax)
-    cb = raxes[1, 0].imshow((data * ierr).T, **kw)
-    cb = raxes[1, 1].imshow((delta * ierr).T, **kw)
-    cb = raxes[1, 2].imshow(((data-delta) * ierr).T, **kw)
+    for e in range(nexp):
+        data, _, _ = r.make_exp(e, value="data")
+        delta, _, _ = r.make_exp(e, value="residual")
+        ierr, _, _ = r.make_exp(e, value="ierr")
+
+        raxes[1+e, 0].set_title(os.path.basename(r.exposures[e]))
+        cb = raxes[1+e, 0].imshow((data * ierr).T, **kw)
+        cb = raxes[1+e, 1].imshow((delta * ierr).T, **kw)
+        cb = raxes[1+e, 2].imshow(((data-delta) * ierr).T, **kw)
     [pl.colorbar(cb, label=r"$\chi$", cax=ax, orientation="horizontal")
      for ax in raxes[0, :]]
 
@@ -105,6 +113,8 @@ def make_catalog(tagnames, n_full=0, bands=["CLEAR"]):
         if os.path.exists(f"{tag}_samples.h5"):
             s = Samples(f"{tag}_samples.h5")
             break
+        else:
+            continue
     n_sample, shapes = s.n_sample, s.shape_cols
     scols = bands + shapes
     icols = [("id", "<i4"), ("wall", "<f4"), ("lnp", "<f8", n_sample)]
@@ -134,8 +144,11 @@ def make_catalog(tagnames, n_full=0, bands=["CLEAR"]):
 def compare_parameters(scat, tcat, parname, point_type="median",
                        colorby="fwhm", splitby="snr"):
 
-    splits = np.unique(tcat[splitby])
-    colors = np.unique(tcat[colorby])
+    colors = np.log10(tcat[colorby])
+    if splitby:
+        splits = np.unique(tcat[splitby])
+    else:
+        splits = [slice(None)]
 
     # xcoordinate
     x = tcat[parname].copy()
@@ -157,13 +170,16 @@ def compare_parameters(scat, tcat, parname, point_type="median",
     daxes = np.atleast_1d(daxes)
     for i, s in enumerate(splits):
         ax = daxes[i]
-        sel = (scat["id"] >= 0) & (tcat[splitby] == s)
+        sel = (scat["id"] >= 0)
+        if splitby:
+            sel = sel & (tcat[splitby] == s)
         ax.errorbar(x[sel], y[1, sel], np.diff(y, axis=0)[:, sel],
                     marker="", linestyle="", color="gray")
-        cb = ax.scatter(x[sel], y[1, sel], c=tcat[colorby][sel], alpha=0.75,
-                        vmin=colors.min(), vmax=colors.max())
+        cb = ax.scatter(x[sel], y[1, sel], c=colors[sel], alpha=0.75,
+                        vmin=np.nanmin(colors), vmax=np.nanmax(colors))
         ax.plot(line, line, "k:")
-        ax.text(0.8, 0.2, f"{splitby.upper()}={s}", transform=ax.transAxes)
+        if splitby:
+            ax.text(0.8, 0.2, f"{splitby.upper()}={s}", transform=ax.transAxes)
 
     dfig.colorbar(cb, label=colorby, orientation="vertical", ax=daxes)
     [ax.set_ylabel(f"{parname} (forcepho)") for ax in daxes.flat]
@@ -172,7 +188,8 @@ def compare_parameters(scat, tcat, parname, point_type="median",
     return dfig, daxes
 
 
-def compare_apflux(scat, tcat, band=["CLEAR"], colorby="fwhm"):
+def compare_apflux(scat, tcat, band=["CLEAR"],
+                   colorby="fwhm", xpar="snr"):
     aflux, tflux = aperture_flux(scat, tcat, band=band)
     aflux = aflux[0]
     ffig, faxes = pl.subplots(figsize=(8, 4))
@@ -180,8 +197,8 @@ def compare_apflux(scat, tcat, band=["CLEAR"], colorby="fwhm"):
     print(aflux.mean(axis=-1).shape, tcat[colorby].shape)
 
     jitter = np.random.uniform(0.9, 1.1, len(tcat))
-    x = tcat["snr"] * jitter
-    yy = aflux * 2.0
+    x = tcat[xpar] * jitter
+    yy = aflux * 2.0 / tcat[band[0]][:, None]
     y = np.percentile(yy, [16, 50, 84], axis=-1)
     print(x.shape, y.shape)
 
@@ -192,7 +209,7 @@ def compare_apflux(scat, tcat, band=["CLEAR"], colorby="fwhm"):
 
     ffig.colorbar(cb, orientation="vertical", label=colorby)
     faxes.axhline(1.0, color="k", linestyle=":")
-    faxes.set_xlabel("SNR")
+    faxes.set_xlabel(xpar.upper())
     faxes.set_ylabel("forcepho aperture flux (50th pctile) / true aperture flux")
     faxes.set_xscale("log")
     ffig.tight_layout()

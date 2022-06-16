@@ -51,13 +51,16 @@ tweakbg = {
           }
 
 
-def clean_image(config, bg_tweak=0):
-    with fits.open(config.image_name) as hdul:
+def clean_image(image_name, clean_image_name, tweak_bg=tweakbg):
+    with fits.open(image_name) as hdul:
         im = hdul[1].data
         unc = hdul[2].data
         bkg = hdul[3].data
         msk = hdul[4].data
         hdr = hdul[1].header
+
+    band = hdr["FILTER"]
+    bg_tweak = tweak_bg.get(band, 0)
 
     zp = hdr["ABMAG"]
     conv = 1e9 * 10**(0.4 * (8.9 - zp))
@@ -69,13 +72,13 @@ def clean_image(config, bg_tweak=0):
     bsub[msk.astype(bool)] = 0
 
     hdul_out = fits.HDUList([fits.PrimaryHDU(header=hdr),
-                             fits.ImageHDU(bsub, hdr),
-                             fits.ImageHDU(err, hdr)])
+                            fits.ImageHDU(bsub, hdr),
+                            fits.ImageHDU(err, hdr)])
 
     hdul_out[0].header["BGTWEAK"] = bg_tweak
     hdul_out[0].header["BUNIT"] = "nJy"
-    print(f"writing to {config.clean_image_name}")
-    hdul_out.writeto(config.clean_image_name, overwrite=True)
+    #print(f"writing to {clean_image_name}")
+    hdul_out.writeto(clean_image_name, overwrite=True)
     hdul_out.close()
 
 
@@ -93,7 +96,7 @@ def fit_image(cat, config):
                                target_niter=config.sampling_draws)
 
     # load the image data
-    patcher = Patcher(fitsfiles=[config.clean_image_name],
+    patcher = Patcher(fitsfiles=config.clean_image_names,
                       psfstore=config.psfstore,
                       splinedata=config.splinedatafile,
                       sci_ext=1,
@@ -129,7 +132,7 @@ def fit_image(cat, config):
     sceneDB.writeout()
 
 
-def find_sources(image_name, fullcat, pad=50, origin=1):
+def find_sources(image_name, fullcat, pad=30, origin=1):
     hdr = fits.getheader(image_name, 1)
     wcs = WCS(hdr)
     x, y = wcs.all_world2pix(fullcat["ra"], fullcat["dec"], origin)
@@ -141,7 +144,7 @@ def find_sources(image_name, fullcat, pad=50, origin=1):
 
 
 def make_tag(config):
-    return f"{config.bands[0]}_id{config.id}"
+    return f"{'+'.join(config.bands)}_id{config.id}"
 
 
 if __name__ == "__main__":
@@ -151,7 +154,7 @@ if __name__ == "__main__":
     # ------------------
     # --- Configure ---
     parser = argparse.ArgumentParser()
-    parser.add_argument("--image_name", type=str, default="")
+    parser.add_argument("--image_names", type=str, nargs="*", default=[""])
     parser.add_argument("--initial_catalog", type=str, default="")
     parser.add_argument("--dir", type=str, default="")
     # I/O
@@ -173,18 +176,29 @@ if __name__ == "__main__":
     pout = os.path.join(config.dir, os.path.basename(config.psfstore))
     shutil.copy(config.psfstore, pout)
 
-    # --- find catalog objects in this image ---
+    # --- find catalog objects in all images ---
     fullcat = np.array(fits.getdata(config.initial_catalog))
-    subcat = find_sources(config.image_name, fullcat)
+    subcat = fullcat.copy()
+    for image_name in config.image_names:
+        subcat = find_sources(image_name, subcat)
+    print(f"found {len(subcat)} sources")
+    if len(subcat) < 3:
+        sys.exit()
     # copy subcatalog
     fits.writeto(f"{config.dir}/initial_image_catalog.fits", subcat, overwrite=True)
 
-    # --- clean the image ---
-    config.bands = [fits.getheader(config.image_name, 1)["FILTER"]]
-    config.clean_image_name = os.path.join(config.dir, os.path.basename(config.image_name))
-    config.clean_image_name.replace("smr", "cal")
+    # --- clean the images ---
+    config.clean_image_names = []
+    config.bands = []
+    for image_name in config.image_names:
+        clean_image_name = os.path.join(config.dir, os.path.basename(image_name))
+        clean_image_name.replace("smr", "cal")
+        config.clean_image_names.append(clean_image_name)
+        config.bands.append(fits.getheader(image_name, 1)["FILTER"])
+        clean_image(image_name, clean_image_name)
+    config.bands = list(np.unique(config.bands))
+
     #sys.exit()
-    clean_image(config, bg_tweak=tweakbg[config.bands[0]])
 
     # --- fit each object ---
     tags = []
@@ -201,7 +215,7 @@ if __name__ == "__main__":
         # --- Fit the data ---
         try:
             fit_image(np.atleast_1d(row), config)
-        except:
+        except(AssertionError):
             continue
 
         # --------------------
