@@ -15,6 +15,8 @@ from forcepho.superscene import LinkedSuperScene
 from forcepho.utils import write_to_disk, NumpyEncoder
 from forcepho.fitting import run_lmc
 from forcepho.postprocess import Samples
+from forcepho.patches.storage import MetaStore, header_to_id
+
 
 from test_plot import plot_trace, plot_corner, plot_residual
 from test_plot import make_catalog, compare_parameters, compare_apflux
@@ -86,7 +88,7 @@ def fit_image(cat, config):
 
     # build the scene server
     bands = config.bands
-    bounds_kwargs = dict(n_pix=1.5,
+    bounds_kwargs = dict(n_pix=2.0,
                          rhalf_range=(0.03, 1.0),
                          sersic_range=(0.8, 6.0))
     sceneDB = LinkedSuperScene(sourcecat=cat, bands=bands,
@@ -143,6 +145,64 @@ def find_sources(image_name, fullcat, pad=30, origin=1):
     return fullcat[inim]
 
 
+def find_exposures(metastore, coordinates, bandlist):
+    """Return a list of image namesfor all exposures that overlap the
+    coordinates. These should be sorted by integer band_id.
+
+    Parameters
+    ----------
+    region : region.Region instance
+        Exposures will be found which overlap this region
+
+    bandlist : list of str
+        A list of band names to search for images.
+
+    Returns
+    -------
+    imnames
+    """
+    wcs_origin = 1
+    imsize = np.zeros(2) + 2048
+    bra, bdec = coordinates
+
+    epaths, bands = [], []
+    for band in bandlist:
+        if band not in metastore.wcs.keys():
+            continue
+        for expID in metastore.wcs[band].keys():
+            #print(expID)
+            epath = "{}/{}".format(band, expID)
+            wcs = metastore.wcs[band][expID]
+            # Check region bounding box has a corner in the exposure.
+            # NOTE: If bounding box entirely contains image this might fail
+            bx, by = wcs.all_world2pix(bra, bdec, wcs_origin)
+            inim = np.any((bx > 0) & (bx < imsize[0]) &
+                          (by > 0) & (by < imsize[1]))
+            if inim:
+                epaths.append(expID)
+                bands.append(band)
+    return epaths, bands
+
+
+def make_image_sets(config, bandlist):
+    meta = MetaStore(config.metastorefile)
+    band = bandlist[0]
+
+    elist = list(meta.headers[band].keys())
+    allexps = []
+    expsets = []
+    for exp in elist:
+        if exp in allexps:
+            continue
+        hdr = meta.headers[band][exp]
+        coordinates = np.array([hdr["CRVAL1"], hdr["CRVAL2"]])
+        exp_set, bandset = find_exposures(meta, coordinates, bandlist)
+        expsets.append(exp_set)
+        allexps += exp_set
+
+    return expsets
+
+
 def make_tag(config):
     return f"{'+'.join(config.bands)}_id{config.id}"
 
@@ -154,9 +214,12 @@ if __name__ == "__main__":
     # ------------------
     # --- Configure ---
     parser = argparse.ArgumentParser()
-    parser.add_argument("--image_names", type=str, nargs="*", default=[""])
-    parser.add_argument("--initial_catalog", type=str, default="")
+    parser.add_argument("--framedir", type=str, default="/data/groups/comp-astro/jades/DC2/Morphology/slopes")
+    parser.add_argument("--metastorefile", type=str, default="./meta-morph.json")
+    parser.add_argument("--set_number", type=int, default=0)
+    parser.add_argument("--bands", type=str, narg="*", default=["F200W", "F277W"])
     parser.add_argument("--dir", type=str, default="")
+    parser.add_argument("--initial_catalog", type=str, default="")
     # I/O
     parser.add_argument("--psfstore", type=str, default="")
     parser.add_argument("--splinedatafile", type=str, default="../data/stores/sersic_splinedata_large.h5")
@@ -176,6 +239,11 @@ if __name__ == "__main__":
     pout = os.path.join(config.dir, os.path.basename(config.psfstore))
     shutil.copy(config.psfstore, pout)
 
+    # --- find all images ---
+    expsets = make_image_sets(config, config.bands)
+    explist = expset[config.set_number]
+    config.image_names = [os.path.join(config.framedir, exp) for exp in explist]
+
     # --- find catalog objects in all images ---
     fullcat = np.array(fits.getdata(config.initial_catalog))
     subcat = fullcat.copy()
@@ -185,7 +253,7 @@ if __name__ == "__main__":
     if len(subcat) < 3:
         sys.exit()
     # copy subcatalog
-    fits.writeto(f"{config.dir}/initial_image_catalog.fits", subcat, overwrite=True)
+    fits.writeto(f"{config.dir}/initial_image_catalog_{config.set_number}.fits", subcat, overwrite=True)
 
     # --- clean the images ---
     config.clean_image_names = []
