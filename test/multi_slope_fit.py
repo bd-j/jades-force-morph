@@ -241,7 +241,7 @@ if __name__ == "__main__":
 
     # --- find all images ---
     expsets = make_image_sets(config, config.bands)
-    explist = expset[config.set_number]
+    explist = expsets[config.set_number]
     config.image_names = [os.path.join(config.framedir, exp) for exp in explist]
 
     # --- find catalog objects in all images ---
