@@ -37,7 +37,7 @@ python multi_slope_fit.py --bands $bands \
                           --metastore ./meta-morph.json \
                           --initial_catalog $incat \
                           --psfstore $psfs \
-                          --dir $dir \
+                          --dir $output \
                           --set_number $SLURM_ARRAY_TASK_ID
 
 
