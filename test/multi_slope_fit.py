@@ -217,7 +217,7 @@ if __name__ == "__main__":
     parser.add_argument("--framedir", type=str, default="/data/groups/comp-astro/jades/DC2/Morphology/slopes")
     parser.add_argument("--metastorefile", type=str, default="./meta-morph.json")
     parser.add_argument("--set_number", type=int, default=0)
-    parser.add_argument("--bands", type=str, narg="*", default=["F200W", "F277W"])
+    parser.add_argument("--bands", type=str, nargs="*", default=["F200W", "F277W"])
     parser.add_argument("--dir", type=str, default="")
     parser.add_argument("--initial_catalog", type=str, default="")
     # I/O
