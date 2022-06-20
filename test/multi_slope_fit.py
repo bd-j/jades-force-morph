@@ -242,7 +242,7 @@ if __name__ == "__main__":
     # --- find all images ---
     expsets = make_image_sets(config, config.bands)
     explist = expsets[config.set_number]
-    config.image_names = [os.path.join(config.framedir, exp) for exp in explist]
+    config.image_names = [os.path.join(config.framedir, f"{exp}.fits") for exp in explist]
 
     # --- find catalog objects in all images ---
     fullcat = np.array(fits.getdata(config.initial_catalog))
