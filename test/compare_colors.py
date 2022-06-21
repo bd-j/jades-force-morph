@@ -44,15 +44,15 @@ if __name__ == "__main__":
     # ------------------
     # --- Configure ---
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dir", type=str, default="./output/F200W+F277W/")
+    parser.add_argument("--dir", type=str, default="./output/gpu/F200W+F277W/")
     parser.add_argument("--bands", type=str, nargs="*", default=["F200W", "F277W"])
     config = parser.parse_args()
-    tcat_name = os.path.join(config.dir, "initial_image_catalog.fits")
+    tcat_name = os.path.join(config.dir, "initial_image_catalog*.fits")
     #config.banddir = f"{config.dir}/{config.bands[0].lower()}"
     thisband = config.bands[0]
 
     # Make summary plots
-    tcat = fits.getdata(tcat_name)
+    tcat = np.concatenate([fits.getdata(cn) for cn in glob.glob(tcat_name)])
     tags = make_all_tags(tcat, config)
     scat = make_catalog(tags, bands=config.bands)
 
@@ -68,7 +68,9 @@ if __name__ == "__main__":
     cb = ax.scatter(tcolor, pcolor[1], c=np.log10(tcat[config.bands[0]]))
     ax.errorbar(tcolor, pcolor[1], yerr=ecolor, color="grey", alpha=0.7, linestyle="")
     x = np.linspace(np.nanmin(pcolor), np.nanmax(pcolor), 100)
-    ax.plot(x, x, linestyle=":", color="k")
+    ax.plot(x, x, linestyle="--", color="k")
+    ax.plot(x, x-0.1, linestyle=":", color="k")
+    ax.plot(x, x+0.1, linestyle=":", color="k")
     ax.set_xlabel(f"{color_name} (Input)")
     ax.set_ylabel(f"{color_name} (forcepho)")
     ax.set_xlim(tcolor.min()-0.1, tcolor.max()+0.1)

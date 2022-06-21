@@ -75,20 +75,22 @@ def plot_residual(patchname, vmin=-1, vmax=5, rfig=None, raxes=None):
     s = Samples(patchname)
     r = Residuals(patchname.replace("samples", "residuals"))
     nexp = len(r.exposures)
+    nband = len(s.bands)
 
     if raxes is None:
-        hr = [1] + nexp * [40]
-        rfig, raxes = pl.subplots(1+nexp, 3, gridspec_kw=dict(height_ratios=hr))
+        hr = [1] + nband * [40]
+        rfig, raxes = pl.subplots(1 + nband, 3, gridspec_kw=dict(height_ratios=hr))
     kw = dict(origin="lower", vmin=vmin, vmax=vmax)
-    for e in range(nexp):
+    for b, band in enumerate(s.bands):
+        e = np.where([band in os.path.basename(exp) for exp in r.exposures])[0].min()
         data, _, _ = r.make_exp(e, value="data")
         delta, _, _ = r.make_exp(e, value="residual")
         ierr, _, _ = r.make_exp(e, value="ierr")
 
         raxes[1+e, 0].set_title(os.path.basename(r.exposures[e]))
-        cb = raxes[1+e, 0].imshow((data * ierr).T, **kw)
-        cb = raxes[1+e, 1].imshow((delta * ierr).T, **kw)
-        cb = raxes[1+e, 2].imshow(((data-delta) * ierr).T, **kw)
+        cb = raxes[1+b, 0].imshow((data * ierr).T, **kw)
+        cb = raxes[1+b, 1].imshow((delta * ierr).T, **kw)
+        cb = raxes[1+b, 2].imshow(((data-delta) * ierr).T, **kw)
     [pl.colorbar(cb, label=r"$\chi$", cax=ax, orientation="horizontal")
      for ax in raxes[0, :]]
 
