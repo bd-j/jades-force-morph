@@ -87,7 +87,7 @@ def plot_residual(patchname, vmin=-1, vmax=5, rfig=None, raxes=None):
         delta, _, _ = r.make_exp(e, value="residual")
         ierr, _, _ = r.make_exp(e, value="ierr")
 
-        raxes[1+e, 0].set_title(os.path.basename(r.exposures[e]))
+        raxes[1+b, 0].set_title(os.path.basename(r.exposures[e]))
         cb = raxes[1+b, 0].imshow((data * ierr).T, **kw)
         cb = raxes[1+b, 1].imshow((delta * ierr).T, **kw)
         cb = raxes[1+b, 2].imshow(((data-delta) * ierr).T, **kw)

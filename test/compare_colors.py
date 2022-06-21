@@ -75,16 +75,16 @@ if __name__ == "__main__":
     ax.set_ylabel(f"{color_name} (forcepho)")
     ax.set_xlim(tcolor.min()-0.1, tcolor.max()+0.1)
     fig.colorbar(cb, label=f"log({config.bands[0]})")
+    fig.savefig(os.path.join(config.dir, f"{'+'.join(config.bands)}_color_comparison.png"), dpi=200)
 
-    sys.exit()
     comp = [("rhalf", config.bands[0]), ("sersic", thisband), ("q", config.bands[0])]
     for show, by in comp:
         fig, axes = compare_parameters(scat, tcat, show, colorby=by, splitby=None)
-        fig.savefig(os.path.join(config.dir, f"{thisband}_{show}_comparison.png"))
+        fig.savefig(os.path.join(config.dir, f"{'+'.join(config.bands)}_{show}_comparison.png"))
         pl.close(fig)
 
     fig, axes = compare_apflux(scat, tcat, band=config.bands, colorby="rhalf", xpar=config.bands[0])
     axes.set_ylim(0.1, 1.5)
     axes.set_xlim(1, 1e3)
-    fig.savefig(os.path.join(config.dir, f"{thisband}_flux_comparison.png"), dpi=200)
+    fig.savefig(os.path.join(config.dir, f"{'+'.join(config.bands)}_flux_comparison.png"), dpi=200)
 
