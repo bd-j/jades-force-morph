@@ -245,7 +245,8 @@ if __name__ == "__main__":
     config.image_names = [os.path.join(config.framedir, f"{exp}.fits") for exp in explist]
     # write the name of all the images in this set
     with open(f"{config.dir}/explist_{config.set_number}.dat", "w") as elist:
-        [elist.write(f"{e}\n") for e in config.image_names]
+        for e in config.image_names:
+            elist.write(f"{e}\n")
 
     # --- find catalog objects in all images ---
     fullcat = np.array(fits.getdata(config.initial_catalog))
