@@ -243,6 +243,9 @@ if __name__ == "__main__":
     expsets = make_image_sets(config, config.bands)
     explist = expsets[config.set_number]
     config.image_names = [os.path.join(config.framedir, f"{exp}.fits") for exp in explist]
+    # write the name of all the images in this set
+    with open(f"{config.dir}/explist_{config.set_number}.dat", "w") as elist:
+        [elist.write(f"{e}\n") for e in config.image_names]
 
     # --- find catalog objects in all images ---
     fullcat = np.array(fits.getdata(config.initial_catalog))
@@ -304,6 +307,7 @@ if __name__ == "__main__":
 
         rfig, raxes, rcb, val = plot_residual(patchname)
         rfig.savefig(f"{config.outroot}_residual.png", dpi=200)
+        rfig.suptitle(title)
         pl.close(rfig)
 
         tags.append(config.outroot)

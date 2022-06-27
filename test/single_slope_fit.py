@@ -221,6 +221,7 @@ if __name__ == "__main__":
         pl.close(cfig)
 
         rfig, raxes, rcb, val = plot_residual(patchname)
+        rfig.suptitle(title)
         rfig.savefig(f"{config.outroot}_residual.png", dpi=200)
         pl.close(rfig)
 

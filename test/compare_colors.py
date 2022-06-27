@@ -73,7 +73,7 @@ if __name__ == "__main__":
     ax.plot(x, x+0.1, linestyle=":", color="k")
     ax.set_xlabel(f"{color_name} (Input)")
     ax.set_ylabel(f"{color_name} (forcepho)")
-    ax.set_xlim(tcolor.min()-0.1, tcolor.max()+0.1)
+    ax.set_xlim(tcolor.min()-0.1, min(tcolor.max()+0.1, 4))
     fig.colorbar(cb, label=f"log({config.bands[0]})")
     fig.savefig(os.path.join(config.dir, f"{'+'.join(config.bands)}_color_comparison.png"), dpi=200)
 
