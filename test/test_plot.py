@@ -143,22 +143,26 @@ def make_catalog(tagnames, n_full=0, bands=["CLEAR"]):
     return cat
 
 
-def compare_parameters(scat, tcat, parname, point_type="median",
-                       colorby="fwhm", splitby="snr"):
+def compare_parameters(scat, tcat, parname, dfax,
+                       point_type="median", colorby="fwhm", splitby="snr",
+                       add_jitter=False, as_delta=False):
 
+    dfig, ax = dfax
     colors = np.log10(tcat[colorby])
-    if splitby:
-        splits = np.unique(tcat[splitby])
-    else:
-        splits = [slice(None)]
 
     # xcoordinate
-    x = tcat[parname].copy()
-    xr = x.min()*0.9, x.max()*1.1
+    xtrue = tcat[parname].copy()
+    #xr = x.min()*0.9, x.max()*1.1
+    xr = xtrue.min(), xtrue.max()
     dx = np.diff(xr)
-    jitter = np.random.uniform(-dx*0.02, dx*0.02, len(x))
-    x = x + jitter
-    line = np.linspace(*xr)
+    if add_jitter:
+        jitter = np.random.uniform(-dx*0.02, dx*0.02, len(xtrue))
+        x = xtrue + jitter
+        xr = x.min(), x.max()
+    else:
+        x = xtrue
+
+    linex = np.linspace(*xr)
 
     yy = scat[parname]
     y = np.percentile(yy, [16, 50, 84], axis=-1)
@@ -166,28 +170,26 @@ def compare_parameters(scat, tcat, parname, point_type="median",
         ind_ml = np.argmax(scat["lnp"], axis=-1)
         ymap = yy[np.arange(len(yy)), ind_ml]
         y[1, :] = ymap
+    if as_delta:
+        y = y - xtrue
+        liney = np.zeros_like(linex)
+    else:
+        liney = linex
 
-    dfig, daxes = pl.subplots(len(splits), 1, sharex=True,
-                              figsize=(8, 1+3*len(splits)))
-    daxes = np.atleast_1d(daxes)
-    for i, s in enumerate(splits):
-        ax = daxes[i]
-        sel = (scat["id"] >= 0)
-        if splitby:
-            sel = sel & (tcat[splitby] == s)
-        ax.errorbar(x[sel], y[1, sel], np.diff(y, axis=0)[:, sel],
-                    marker="", linestyle="", color="gray")
-        cb = ax.scatter(x[sel], y[1, sel], c=colors[sel], alpha=0.75,
-                        vmin=np.nanmin(colors), vmax=np.nanmax(colors))
-        ax.plot(line, line, "k:")
-        if splitby:
-            ax.text(0.8, 0.2, f"{splitby.upper()}={s}", transform=ax.transAxes)
+    sel = (scat["id"] >= 0)
+    ax.errorbar(x[sel], y[1, sel], np.diff(y, axis=0)[:, sel],
+                marker="", linestyle="", color="gray")
+    cb = ax.scatter(x[sel], y[1, sel], c=colors[sel], alpha=0.75,
+                    vmin=np.nanmin(colors), vmax=np.nanmax(colors))
+    ax.plot(linex, liney, "k:")
 
-    dfig.colorbar(cb, label=colorby, orientation="vertical", ax=daxes)
-    [ax.set_ylabel(f"{parname} (forcepho)") for ax in daxes.flat]
-    daxes.flat[-1].set_xlabel(f"{parname} (input)")
+    if as_delta:
+        ax.set_ylabel(f"$\Delta${parname} (output-input)")
+    else:
+        ax.set_ylabel(f"{parname} (output)")
+    ax.set_xlabel(f"{parname} (input)")
 
-    return dfig, daxes
+    return dfig, ax, cb
 
 
 def compare_apflux(scat, tcat, band=["CLEAR"],

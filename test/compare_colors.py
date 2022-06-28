@@ -62,20 +62,36 @@ if __name__ == "__main__":
     scolor = -2.5 * np.log10(scat[config.bands[0]] / scat[config.bands[1]])
     pcolor = np.percentile(scolor, [16, 50, 84], axis=-1)
     ecolor = np.diff(pcolor, axis=0)
+    flux = tcat[config.bands[0]]
+    dcolor = pcolor[1] - tcolor
 
     pl.ion()
-    fig, ax = pl.subplots()
-    cb = ax.scatter(tcolor, pcolor[1], c=np.log10(tcat[config.bands[0]]))
+    fig, axes = pl.subplots(2, 1, gridspec_kw=dict(hspace=0.25))
+    ax = axes[0]
+    cb = ax.scatter(tcolor, pcolor[1], c=np.log10(flux))
     ax.errorbar(tcolor, pcolor[1], yerr=ecolor, color="grey", alpha=0.7, linestyle="")
     x = np.linspace(np.nanmin(pcolor), np.nanmax(pcolor), 100)
     ax.plot(x, x, linestyle="--", color="k")
     ax.plot(x, x-0.1, linestyle=":", color="k")
     ax.plot(x, x+0.1, linestyle=":", color="k")
-    ax.set_xlabel(f"{color_name} (Input)")
     ax.set_ylabel(f"{color_name} (forcepho)")
+    ax.set_xlabel(f"{color_name} (Input)")
     ax.set_xlim(tcolor.min()-0.1, min(tcolor.max()+0.1, 4))
-    fig.colorbar(cb, label=f"log({config.bands[0]})")
+
+    ax = axes[1]
+    ax.scatter(flux, dcolor, c=np.log10(flux))
+    ax.errorbar(flux, dcolor, yerr=ecolor, color="grey", alpha=0.7, linestyle="")
+    ax.axhline(0.0, color="k", linestyle="--")
+    ax.axhline(-0.1, color="k", linestyle=":")
+    ax.axhline(0.1, color="k", linestyle=":")
+    ax.set_xscale("log")
+    ax.set_xlabel(f"{config.bands[0]} (Input)")
+    ax.set_ylabel(f"forcepho-Input color")
+    ax.set_ylim(-1, 1)
+
+    fig.colorbar(cb, label=f"log({config.bands[0]})", ax=axes)
     fig.savefig(os.path.join(config.dir, f"{'+'.join(config.bands)}_color_comparison.png"), dpi=200)
+    pl.close(fig)
 
     comp = [("rhalf", config.bands[0]), ("sersic", thisband), ("q", config.bands[0])]
     for show, by in comp:
@@ -87,4 +103,4 @@ if __name__ == "__main__":
     axes.set_ylim(0.1, 1.5)
     axes.set_xlim(1, 1e3)
     fig.savefig(os.path.join(config.dir, f"{'+'.join(config.bands)}_flux_comparison.png"), dpi=200)
-
+    pl.close(fig)

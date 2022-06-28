@@ -184,23 +184,39 @@ def find_exposures(metastore, coordinates, bandlist):
     return epaths, bands
 
 
-def make_image_sets(config, bandlist):
+def make_image_sets(config, bandlist, single=False):
     meta = MetaStore(config.metastorefile)
     band = bandlist[0]
 
     elist = list(meta.headers[band].keys())
     allexps = []
-    expsets = []
+    expsets, bandsets = [], []
     for exp in elist:
         if exp in allexps:
             continue
         hdr = meta.headers[band][exp]
         coordinates = np.array([hdr["CRVAL1"], hdr["CRVAL2"]])
-        exp_set, bandset = find_exposures(meta, coordinates, bandlist)
+        exp_set, band_set = find_exposures(meta, coordinates, bandlist)
         expsets.append(exp_set)
+        bandsets.append(band_set)
         allexps += exp_set
 
+    # reduce to a single exposure in each band
+    if single:
+        elists = [one_per_band(eset, bset)
+                  for eset, best in zip(expsets, bandsets)]
+        expsets = elists
+
     return expsets
+
+
+def one_per_band(expset, bandset):
+    covered = []
+    for e, b in zip(expset, bandset):
+        if b not in covered:
+            covered.append(b)
+            explist.append(e)
+    return explist
 
 
 def make_tag(config):
@@ -217,6 +233,7 @@ if __name__ == "__main__":
     parser.add_argument("--framedir", type=str, default="/data/groups/comp-astro/jades/DC2/Morphology/slopes")
     parser.add_argument("--metastorefile", type=str, default="./meta-morph.json")
     parser.add_argument("--set_number", type=int, default=0)
+    parser.add_argument("--single_exposure", type=int, default=0)
     parser.add_argument("--bands", type=str, nargs="*", default=["F200W", "F277W"])
     parser.add_argument("--dir", type=str, default="")
     parser.add_argument("--initial_catalog", type=str, default="")
@@ -240,7 +257,7 @@ if __name__ == "__main__":
     shutil.copy(config.psfstore, pout)
 
     # --- find all images ---
-    expsets = make_image_sets(config, config.bands)
+    expsets = make_image_sets(config, config.bands, single=config.single_exposure)
     explist = expsets[config.set_number]
     config.image_names = [os.path.join(config.framedir, f"{exp}.fits") for exp in explist]
     # write the name of all the images in this set
