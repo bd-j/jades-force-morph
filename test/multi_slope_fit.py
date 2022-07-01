@@ -40,7 +40,7 @@ else:
     class Patcher(FITSPatch, CPUPatchMixin):
         pass
 
-tweakbg = {
+default_tweakbg = {
            "F090W": 0.0125,
            "F115W": 0.0125,
            "F150W": 0.0125,
@@ -53,7 +53,7 @@ tweakbg = {
           }
 
 
-def clean_image(image_name, clean_image_name, tweak_bg=tweakbg):
+def clean_image(image_name, clean_image_name, bg_tweaks=None):
     with fits.open(image_name) as hdul:
         im = hdul[1].data
         unc = hdul[2].data
@@ -62,7 +62,10 @@ def clean_image(image_name, clean_image_name, tweak_bg=tweakbg):
         hdr = hdul[1].header
 
     band = hdr["FILTER"]
-    bg_tweak = tweak_bg.get(band, 0)
+    if bg_tweaks is not None:
+        bg_tweak = bg_tweaks.get(band, 0)
+    else:
+        bg_tweak = 0
 
     zp = hdr["ABMAG"]
     conv = 1e9 * 10**(0.4 * (8.9 - zp))
@@ -234,6 +237,7 @@ if __name__ == "__main__":
     parser.add_argument("--metastorefile", type=str, default="./meta-morph.json")
     parser.add_argument("--set_number", type=int, default=0)
     parser.add_argument("--single_exposure", type=int, default=0)
+    parser.add_argument("--tweak_background", type=int, default=1)
     parser.add_argument("--bands", type=str, nargs="*", default=["F200W", "F277W"])
     parser.add_argument("--dir", type=str, default="")
     parser.add_argument("--initial_catalog", type=str, default="")
@@ -277,6 +281,10 @@ if __name__ == "__main__":
     fits.writeto(f"{config.dir}/initial_image_catalog_{config.set_number}.fits", subcat, overwrite=True)
 
     # --- clean the images ---
+    if config.tweak_background:
+        bg_tweaks = default_tweakbg
+    else:
+        bg_tweaks = None
     config.clean_image_names = []
     config.bands = []
     for image_name in config.image_names:
@@ -284,7 +292,7 @@ if __name__ == "__main__":
         clean_image_name.replace("smr", "cal")
         config.clean_image_names.append(clean_image_name)
         config.bands.append(fits.getheader(image_name, 1)["FILTER"])
-        clean_image(image_name, clean_image_name)
+        clean_image(image_name, clean_image_name, bg_tweaks=bg_tweaks)
     config.bands = list(np.unique(config.bands))
 
     #sys.exit()

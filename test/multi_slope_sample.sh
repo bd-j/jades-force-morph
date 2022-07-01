@@ -28,8 +28,10 @@ cd $PROJECT_DIR/test
 
 incat=$PROJECT_DIR/data/catalogs/truth_initial_catalog.fits
 psfs=$PROJECT_DIR/data/stores/psf_jwst_oct21_ng4m0.h5
+single=1
+tweak_bg=1
 bands="F200W F277W"
-output="output/F200W+F277W"
+output="output/F200W+F277W_single${single}_bsub${tweak_bg}"
 
 
 python multi_slope_fit.py --bands $bands \
@@ -39,6 +41,8 @@ python multi_slope_fit.py --bands $bands \
                           --psfstore $psfs \
                           --dir $output \
                           --set_number $SLURM_ARRAY_TASK_ID
+                          --single_exposure $single
+                          --tweak_background $tweak_bg
 
 
 date
