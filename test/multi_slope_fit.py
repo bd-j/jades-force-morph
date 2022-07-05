@@ -272,7 +272,7 @@ if __name__ == "__main__":
         for e in config.image_names:
             elist.write(f"{e}\n")
 
-    sys.exit()
+    #sys.exit()
 
     # --- find catalog objects in all images ---
     fullcat = np.array(fits.getdata(config.initial_catalog))
