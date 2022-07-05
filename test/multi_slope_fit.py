@@ -53,7 +53,7 @@ default_tweakbg = {
           }
 
 
-def clean_image(image_name, clean_image_name, bg_tweaks=None):
+def clean_image(image_name, clean_image_name, bg_tweaks=None, bg_value=0.0):
     with fits.open(image_name) as hdul:
         im = hdul[1].data
         unc = hdul[2].data
@@ -62,10 +62,11 @@ def clean_image(image_name, clean_image_name, bg_tweaks=None):
         hdr = hdul[1].header
 
     band = hdr["FILTER"]
-    if bg_tweaks is not None:
+    if type(bg_tweaks) is dict:
         bg_tweak = bg_tweaks.get(band, 0)
     else:
-        bg_tweak = 0
+        bg_tweak = bg_value
+    print(f"BG tweak for {band} = {bg_tweak}")
 
     zp = hdr["ABMAG"]
     conv = 1e9 * 10**(0.4 * (8.9 - zp))
@@ -207,14 +208,14 @@ def make_image_sets(config, bandlist, single=False):
     # reduce to a single exposure in each band
     if single:
         elists = [one_per_band(eset, bset)
-                  for eset, best in zip(expsets, bandsets)]
+                  for eset, bset in zip(expsets, bandsets)]
         expsets = elists
 
     return expsets
 
 
 def one_per_band(expset, bandset):
-    covered = []
+    covered, explist = [], []
     for e, b in zip(expset, bandset):
         if b not in covered:
             covered.append(b)
@@ -235,12 +236,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--framedir", type=str, default="/data/groups/comp-astro/jades/DC2/Morphology/slopes")
     parser.add_argument("--metastorefile", type=str, default="./meta-morph.json")
-    parser.add_argument("--set_number", type=int, default=0)
-    parser.add_argument("--single_exposure", type=int, default=0)
-    parser.add_argument("--tweak_background", type=int, default=1)
     parser.add_argument("--bands", type=str, nargs="*", default=["F200W", "F277W"])
     parser.add_argument("--dir", type=str, default="")
     parser.add_argument("--initial_catalog", type=str, default="")
+    # extras for image testing
+    parser.add_argument("--set_number", type=int, default=0)
+    parser.add_argument("--single_exposure", type=int, default=0)
+    parser.add_argument("--tweak_background", type=int, default=1)
+    parser.add_argument("--bg_value", type=float, default=0.0)
     # I/O
     parser.add_argument("--psfstore", type=str, default="")
     parser.add_argument("--splinedatafile", type=str, default="../data/stores/sersic_splinedata_large.h5")
@@ -269,6 +272,8 @@ if __name__ == "__main__":
         for e in config.image_names:
             elist.write(f"{e}\n")
 
+    sys.exit()
+
     # --- find catalog objects in all images ---
     fullcat = np.array(fits.getdata(config.initial_catalog))
     subcat = fullcat.copy()
@@ -282,8 +287,10 @@ if __name__ == "__main__":
 
     # --- clean the images ---
     if config.tweak_background:
+        print("tweaking background using dic")
         bg_tweaks = default_tweakbg
     else:
+        print("tweaking background based on bg_val")
         bg_tweaks = None
     config.clean_image_names = []
     config.bands = []
@@ -292,7 +299,9 @@ if __name__ == "__main__":
         clean_image_name.replace("smr", "cal")
         config.clean_image_names.append(clean_image_name)
         config.bands.append(fits.getheader(image_name, 1)["FILTER"])
-        clean_image(image_name, clean_image_name, bg_tweaks=bg_tweaks)
+        clean_image(image_name, clean_image_name,
+                    bg_tweaks=bg_tweaks, bg_value=config.bg_value)
+
     config.bands = list(np.unique(config.bands))
 
     #sys.exit()

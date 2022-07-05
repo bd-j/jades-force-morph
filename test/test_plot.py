@@ -148,7 +148,10 @@ def compare_parameters(scat, tcat, parname, dfax=None,
                        add_jitter=False, as_delta=False):
 
     dfig, ax = dfax
-    colors = np.log10(tcat[colorby])
+    if "F" in colorby:
+        colors = np.log10(tcat[colorby])
+    else:
+        colors = tcat[colorby]
 
     # xcoordinate
     xtrue = tcat[parname].copy()
