@@ -147,7 +147,8 @@ def compare_parameters(scat, tcat, parname, dfax=None,
                        point_type="median", colorby="fwhm", splitby="snr",
                        add_jitter=False, as_delta=False):
 
-    dfig, ax = dfax
+    if dfax is not None:
+        dfig, ax = dfax
     if "F" in colorby:
         colors = np.log10(tcat[colorby])
     else:

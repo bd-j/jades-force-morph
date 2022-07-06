@@ -259,10 +259,11 @@ if __name__ == "__main__":
     # --- make output directories, copy config ---
     os.makedirs(config.dir, exist_ok=True)
     # copy the config data
-    with open(f"{config.dir}/config.json", "w") as cfg:
-        json.dump(vars(config), cfg, cls=NumpyEncoder)
-    pout = os.path.join(config.dir, os.path.basename(config.psfstore))
-    shutil.copy(config.psfstore, pout)
+    if config.set_number == 0:
+        with open(f"{config.dir}/config.json", "w") as cfg:
+            json.dump(vars(config), cfg, cls=NumpyEncoder)
+        pout = os.path.join(config.dir, os.path.basename(config.psfstore))
+        shutil.copy(config.psfstore, pout)
 
     # --- find all images ---
     expsets = make_image_sets(config, config.bands, single=config.single_exposure)

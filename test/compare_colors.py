@@ -89,18 +89,22 @@ if __name__ == "__main__":
     ax.set_ylabel(f"forcepho-Input color")
     ax.set_ylim(-1, 1)
 
+    chi = dcolor / np.clip(ecolor.sum(axis=0), 0.01, np.inf)
+
+    if len(axes) == 3:
+        ax = axes[2]
+        ax.scatter(flux, chi, c=np.log10(flux))
+        ax.set_xscale("log")
+        ax.axhline(0.0, color="k", linestyle="--")
+        ax.axhline(-1, color="k", linestyle=":")
+        ax.axhline(1, color="k", linestyle=":")
+        ax.set_xlabel(f"{config.bands[0]} (Input)")
+        ax.set_ylabel(f"(forcepho-Input) / sigma")
+        ax.set_ylim(-1, 1)
+
     fig.colorbar(cb, label=f"log({config.bands[0]})", ax=axes)
     fig.savefig(os.path.join(config.dir, f"{'+'.join(config.bands)}_color_comparison.png"), dpi=200)
     pl.close(fig)
 
-    comp = [("rhalf", config.bands[0]), ("sersic", thisband), ("q", config.bands[0])]
-    for show, by in comp:
-        fig, axes = compare_parameters(scat, tcat, show, colorby=by, splitby=None)
-        fig.savefig(os.path.join(config.dir, f"{'+'.join(config.bands)}_{show}_comparison.png"))
-        pl.close(fig)
-
-    fig, axes = compare_apflux(scat, tcat, band=config.bands, colorby="rhalf", xpar=config.bands[0])
-    axes.set_ylim(0.1, 1.5)
-    axes.set_xlim(1, 1e3)
-    fig.savefig(os.path.join(config.dir, f"{'+'.join(config.bands)}_flux_comparison.png"), dpi=200)
-    pl.close(fig)
+    axes[-1].text(0.1, 0.8, f"{np.isfinite(chi).sum()} sources with sigma(chi)={np.nanstd(chi):.2f}",
+                  transform=axes[-1].transAxes)
