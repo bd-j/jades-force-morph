@@ -28,7 +28,7 @@ cd $PROJECT_DIR/test
 
 incat=$PROJECT_DIR/data/catalogs/truth_initial_catalog.fits
 psfs=$PROJECT_DIR/data/stores/psf_jwst_oct21_ng4m0.h5
-single=1
+single=0
 tweak_bg=1
 bg_value=0
 bands="F200W F277W"

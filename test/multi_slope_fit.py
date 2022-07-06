@@ -41,15 +41,15 @@ else:
         pass
 
 default_tweakbg = {
-           "F090W": 0.0125,
-           "F115W": 0.0125,
-           "F150W": 0.0125,
-           "F200W": 0.0125,
-           "F277W": 0.0125,
-           "F335M": 0.0175,
-           "F356W": 0.0125,
-           "F410M": 0.0175,
-           "F444W": 0.0125
+                   "F090W": -0.015,
+                   "F115W": -0.015,
+                   "F150W": -0.015,
+                   "F200W": -0.015,
+                   "F277W": 0.0125,
+                   "F335M": 0.0175,
+                   "F356W": 0.0125,
+                   "F410M": 0.0175,
+                   "F444W": 0.0125
           }
 
 
@@ -254,6 +254,7 @@ if __name__ == "__main__":
     parser.add_argument("--warmup", type=int, nargs="*", default=[256])
     parser.add_argument("--progressbar", type=int, default=0)
     config = parser.parse_args()
+    config.default_tweakbg = default_tweakbg
 
     # --- make output directories, copy config ---
     os.makedirs(config.dir, exist_ok=True)
@@ -287,16 +288,17 @@ if __name__ == "__main__":
 
     # --- clean the images ---
     if config.tweak_background:
-        print("tweaking background using dic")
+        print("tweaking background using dictionary")
         bg_tweaks = default_tweakbg
+        assert config.bg_value == 0.0
     else:
-        print("tweaking background based on bg_val")
+        print("tweaking background based on bg_value")
         bg_tweaks = None
     config.clean_image_names = []
     config.bands = []
     for image_name in config.image_names:
         clean_image_name = os.path.join(config.dir, os.path.basename(image_name))
-        clean_image_name.replace("smr", "cal")
+        clean_image_name = clean_image_name.replace("smr", "cal")
         config.clean_image_names.append(clean_image_name)
         config.bands.append(fits.getheader(image_name, 1)["FILTER"])
         clean_image(image_name, clean_image_name,
